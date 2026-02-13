@@ -63,10 +63,10 @@ const Footer = () => {
             {/* Social Media */}
             <div className="mt-3">
               <h6 className="fw-bold">{t.footer?.followUs || 'Follow Us'}</h6>
-              <a href="#" className="text-light me-3"><i className="bi bi-facebook fs-5"></i></a>
-              <a href="#" className="text-light me-3"><i className="bi bi-instagram fs-5"></i></a>
-              <a href="#" className="text-light me-3"><i className="bi bi-youtube fs-5"></i></a>
-              <a href="#" className="text-light"><i className="bi bi-telegram fs-5"></i></a>
+              <a href="#!" className="text-light me-3"><i className="bi bi-facebook fs-5"></i></a>
+              <a href="#!" className="text-light me-3"><i className="bi bi-instagram fs-5"></i></a>
+              <a href="#!" className="text-light me-3"><i className="bi bi-youtube fs-5"></i></a>
+              <a href="#!" className="text-light"><i className="bi bi-telegram fs-5"></i></a>
             </div>
           </div>
         </div>
@@ -77,11 +77,11 @@ const Footer = () => {
         <div className="text-center small">
           © 2025 AJC Siluvairaja Ministry. {t.footer?.allRightsReserved || 'All rights reserved'}
           <span className="mx-2">|</span>
-          <a href="#" className="text-light text-decoration-none">{t.footer?.termsOfService || 'Terms of Service'}</a>
+          <a href="#!" className="text-light text-decoration-none">{t.footer?.termsOfService || 'Terms of Service'}</a>
           <span className="mx-2">|</span>
-          <a href="#" className="text-light text-decoration-none">{t.footer?.privacyPolicy || 'Privacy Policy'}</a>
+          <a href="#!" className="text-light text-decoration-none">{t.footer?.privacyPolicy || 'Privacy Policy'}</a>
           <span className="mx-2">|</span>
-          <a href="#" className="text-light text-decoration-none">{t.footer?.cookiePolicy || 'Cookie Policy'}</a>
+          <a href="#!" className="text-light text-decoration-none">{t.footer?.cookiePolicy || 'Cookie Policy'}</a>
         </div>
       </div>
     </footer>

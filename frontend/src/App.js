@@ -8,7 +8,6 @@ import AwakenurNavbar from './components/Navbar';
 import Header from './components/Header';
 import EventCountdown from './components/EventCountdown';
 import Pastors from './components/Pastors';
-import BlogArticles from './components/BlogArticles';
 import Blog from './components/Blog';
 import EventRegistration from './components/EventRegistration';
 import Footer from './components/Footer';

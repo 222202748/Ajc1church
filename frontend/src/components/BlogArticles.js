@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_ENDPOINTS, BASE_URL } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 import { 
   Share2, 

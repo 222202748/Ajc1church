@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Check, Heart, Users, BookOpen, Church, Building, Smartphone, X, Copy, CheckCircle, Download, QrCode } from 'lucide-react';
+import { ArrowLeft, Check, Heart, Users, BookOpen, Church, Building, X, Copy, CheckCircle, Download, QrCode } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Donation = () => {

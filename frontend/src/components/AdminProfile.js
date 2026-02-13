@@ -7,7 +7,6 @@ const AdminProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   
   // Password change form state
   const [passwordForm, setPasswordForm] = useState({
