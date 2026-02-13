@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Check, Heart, Users, BookOpen, Church, Building, X, Copy, CheckCircle, Download, QrCode } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -170,17 +170,19 @@ const Donation = () => {
 
   const predefinedAmounts = [500, 1000, 2500, 5000, 10000, 25000];
 
-  const donationPurposes = [
+  const donationPurposes = useMemo(() => [
     { id: 'general', name: 'General Fund', description: 'Support church operations', icon: Church },
     { id: 'building', name: 'Building Fund', description: 'Construction & maintenance', icon: Building },
     { id: 'mission', name: 'Mission Work', description: 'Evangelism & outreach', icon: Users },
     { id: 'charity', name: 'Charity Work', description: 'Help those in need', icon: Heart },
     { id: 'education', name: 'Education', description: 'Educational programs', icon: BookOpen },
     { id: 'youth', name: 'Youth Ministry', description: 'Youth programs & activities', icon: Users }
-  ];
+  ], []);
+
+  const getAmount = useCallback(() => customAmount || selectedAmount, [customAmount, selectedAmount]);
 
   // Generate QR Code URL using QR Server API
-  const generateQRCode = (amount) => {
+  const generateQRCode = useCallback((amount) => {
     if (!amount) return '';
     
     // Create UPI payment URL
@@ -193,7 +195,7 @@ const Donation = () => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
     
     return qrUrl;
-  };
+  }, [donationPurpose, donorInfo.name, bankDetails.upiId, bankDetails.accountName, donationPurposes]);
 
   // Update QR code when amount or purpose changes
   useEffect(() => {
@@ -201,7 +203,7 @@ const Donation = () => {
     if (amount && showPaymentDetails) {
       setQrCodeUrl(generateQRCode(amount));
     }
-  }, [selectedAmount, customAmount, donationPurpose, donorInfo.name, showPaymentDetails]);
+  }, [getAmount, generateQRCode, showPaymentDetails]);
 
   const handleDonationSubmit = () => {
     if (!donorInfo.name || !donorInfo.email || !getAmount()) {
@@ -249,8 +251,6 @@ const Donation = () => {
     setShowForm(false);
     setShowPaymentDetails(false);
   };
-
-  const getAmount = () => customAmount || selectedAmount;
 
   const handleProceedToDonate = () => {
     if (!getAmount()) {

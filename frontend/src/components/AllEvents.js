@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
@@ -7,9 +7,9 @@ const AllEvents = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const { language } = useLanguage();
-  const t = translations[language] || translations.en || {}; // Add fallback
+  const t = useMemo(() => translations[language] || translations.en || {}, [language]);
 
-  const getCurrentDate = () => {
+  const getCurrentDate = useCallback(() => {
     const today = new Date();
     const options = { 
       weekday: 'long', 
@@ -18,83 +18,83 @@ const AllEvents = () => {
       day: '2-digit' 
     };
     return today.toLocaleDateString(language === 'tamil' ? 'ta-IN' : 'en-US', options);
-  };
+  }, [language]);
 
   // Add fallback values for missing translation keys
-  const getTranslation = (key, fallback = key) => {
+  const getTranslation = useCallback((key, fallback = key) => {
     return t[key] || fallback;
-  };
-
-  const events = [
-    {
-      id: 1,
-      title: getTranslation('wonderfulGathering', 'Wonderful Gathering'),
-      date: "29",
-      month: "JUN",
-      year: "2025",
-      time: getTranslation('eventTime', 'Time') + " 06:00 pm",
-      location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-      description: getTranslation('events', 'Event Description'),
-      image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop&auto=format"
-    },
-    {
-      id: 2,
-      title: getTranslation('buildingBonds', 'Building Bonds'),
-      date: "29",
-      month: "JUN",
-      year: "2025",
-      time: getTranslation('eventTime', 'Time') + " 06:00 pm",
-      location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-      description: getTranslation('events', 'Event Description'),
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop&auto=format"
-    },
-    {
-      id: 3,
-      title: getTranslation('thankfulness', 'Thankfulness'),
-      date: "12",
-      month: "JUL",
-      year: "2025",
-      time: getTranslation('eventTime', 'Time') + " 12:00 pm",
-      location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-      description: getTranslation('events', 'Event Description'),
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=250&fit=crop&auto=format"
-    },
-    {
-      id: 4,
-      title: getTranslation('faithFellowship', 'Faith Fellowship'),
-      date: "27",
-      month: "JUL",
-      year: "2025",
-      time: getTranslation('eventTime', 'Time') + " 08:00 pm",
-      location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-      description: getTranslation('events', 'Event Description'),
-      image: "https://images.unsplash.com/photo-1438032005730-c779502df39b?w=400&h=250&fit=crop&auto=format"
-    },
-    {
-      id: 5,
-      title: getTranslation('youthGathering', 'Youth Gathering'),
-      date: "15",
-      month: "AUG",
-      year: "2025",
-      time: getTranslation('eventTime', 'Time') + " 07:00 pm",
-      location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-      description: getTranslation('events', 'Event Description'),
-      image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=250&fit=crop&auto=format"
-    },
-    {
-      id: 6,
-      title: getTranslation('prayerService', 'Prayer Service'),
-      date: "28",
-      month: "AUG",
-      year: "2025",
-      time: getTranslation('eventTime', 'Time') + " 05:30 am",
-      location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-      description: getTranslation('events', 'Event Description'),
-      image: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&h=250&fit=crop&auto=format"
-    }
-  ];
+  }, [t]);
 
   const filteredEvents = useMemo(() => {
+    const events = [
+      {
+        id: 1,
+        title: getTranslation('wonderfulGathering', 'Wonderful Gathering'),
+        date: "29",
+        month: "JUN",
+        year: "2025",
+        time: getTranslation('eventTime', 'Time') + " 06:00 pm",
+        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
+        description: getTranslation('events', 'Event Description'),
+        image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop&auto=format"
+      },
+      {
+        id: 2,
+        title: getTranslation('buildingBonds', 'Building Bonds'),
+        date: "29",
+        month: "JUN",
+        year: "2025",
+        time: getTranslation('eventTime', 'Time') + " 06:00 pm",
+        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
+        description: getTranslation('events', 'Event Description'),
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop&auto=format"
+      },
+      {
+        id: 3,
+        title: getTranslation('thankfulness', 'Thankfulness'),
+        date: "12",
+        month: "JUL",
+        year: "2025",
+        time: getTranslation('eventTime', 'Time') + " 12:00 pm",
+        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
+        description: getTranslation('events', 'Event Description'),
+        image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=250&fit=crop&auto=format"
+      },
+      {
+        id: 4,
+        title: getTranslation('faithFellowship', 'Faith Fellowship'),
+        date: "27",
+        month: "JUL",
+        year: "2025",
+        time: getTranslation('eventTime', 'Time') + " 08:00 pm",
+        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
+        description: getTranslation('events', 'Event Description'),
+        image: "https://images.unsplash.com/photo-1438032005730-c779502df39b?w=400&h=250&fit=crop&auto=format"
+      },
+      {
+        id: 5,
+        title: getTranslation('youthGathering', 'Youth Gathering'),
+        date: "15",
+        month: "AUG",
+        year: "2025",
+        time: getTranslation('eventTime', 'Time') + " 07:00 pm",
+        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
+        description: getTranslation('events', 'Event Description'),
+        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=250&fit=crop&auto=format"
+      },
+      {
+        id: 6,
+        title: getTranslation('prayerService', 'Prayer Service'),
+        date: "28",
+        month: "AUG",
+        year: "2025",
+        time: getTranslation('eventTime', 'Time') + " 05:30 am",
+        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
+        description: getTranslation('events', 'Event Description'),
+        image: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&h=250&fit=crop&auto=format"
+      }
+    ];
+
     if (!searchTerm.trim()) {
       return events;
     }
@@ -111,7 +111,7 @@ const AllEvents = () => {
         event.time.toLowerCase().includes(searchLower)
       );
     });
-  }, [searchTerm, events]);
+  }, [searchTerm, getTranslation]);
 
   const clearSearch = () => {
     setSearchTerm('');

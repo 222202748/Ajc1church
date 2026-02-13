@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   DollarSign, 
   Users, 
@@ -40,16 +40,7 @@ const DonationDashboard = () => {
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
 
-  useEffect(() => {
-    fetchDonations();
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    filterDonations();
-  }, [searchTerm, filterStatus, filterPurpose, donations]);
-
-  const fetchDonations = async () => {
+  const fetchDonations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -61,9 +52,9 @@ const DonationDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await axiosInstance.get(API_ENDPOINTS.donationStats);
       const data = response.data;
@@ -72,9 +63,14 @@ const DonationDashboard = () => {
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, []);
 
-  const filterDonations = () => {
+  useEffect(() => {
+    fetchDonations();
+    fetchStats();
+  }, [fetchDonations, fetchStats]);
+
+  const filterDonations = useCallback(() => {
     let filtered = donations;
 
     // Apply search filter
@@ -98,7 +94,11 @@ const DonationDashboard = () => {
     }
 
     setFilteredDonations(filtered);
-  };
+  }, [searchTerm, filterStatus, filterPurpose, donations]);
+
+  useEffect(() => {
+    filterDonations();
+  }, [filterDonations]);
 
   const getStatusColor = (status) => {
     switch (status) {

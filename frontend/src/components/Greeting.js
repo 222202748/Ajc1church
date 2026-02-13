@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 
+const greetings = [
+  'Welcome to Mani Church!',
+  'God Bless You!',
+  'Peace Be With You!',
+  'Have a Blessed Day!',
+  'Join Us in Prayer!'
+];
+
 const Greeting = () => {
   const [greeting, setGreeting] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
-  
-  const greetings = [
-    'Welcome to Mani Church!',
-    'God Bless You!',
-    'Peace Be With You!',
-    'Have a Blessed Day!',
-    'Join Us in Prayer!'
-  ];
   
   useEffect(() => {
     // Set initial greeting

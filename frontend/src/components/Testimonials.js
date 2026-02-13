@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
@@ -8,7 +8,7 @@ const Testimonials = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   
-  const getTranslation = (key, fallback) => {
+  const getTranslation = useCallback((key, fallback) => {
     try {
       const keys = key.split('.');
       let result = translations[language] || translations.english;
@@ -23,9 +23,9 @@ const Testimonials = () => {
     } catch (error) {
       return fallback;
     }
-  };
+  }, [language]);
 
-  const testimonials = [
+  const testimonials = useMemo(() => [
     {
       id: 1,
       name: getTranslation('testimonials.sarahName', 'Sarah Thomas'),
@@ -47,9 +47,9 @@ const Testimonials = () => {
       quote: getTranslation('testimonials.maryQuote', 'The worship experience here is amazing. I feel God\'s presence every time we gather together.'),
       image: 'https://randomuser.me/api/portraits/women/68.jpg'
     },
-  ];
+  ], [getTranslation]);
   
-  const nextTestimonial = () => {
+  const nextTestimonial = useCallback(() => {
     if (!isAnimating) {
       setIsAnimating(true);
       setTimeout(() => {
@@ -57,9 +57,9 @@ const Testimonials = () => {
         setIsAnimating(false);
       }, 500);
     }
-  };
+  }, [isAnimating, testimonials.length]);
   
-  const prevTestimonial = () => {
+  const prevTestimonial = useCallback(() => {
     if (!isAnimating) {
       setIsAnimating(true);
       setTimeout(() => {
@@ -69,7 +69,7 @@ const Testimonials = () => {
         setIsAnimating(false);
       }, 500);
     }
-  };
+  }, [isAnimating, testimonials.length]);
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -77,7 +77,7 @@ const Testimonials = () => {
     }, 8000);
     
     return () => clearInterval(interval);
-  }, [testimonials.length]);
+  }, [nextTestimonial]);
   
   return (
     <div className="bg-amber-700 py-16 px-4 sm:px-6 lg:px-8 my-12">
