@@ -29,7 +29,15 @@ const AdminLogin = () => {
       navigate('/Admin/dashboard');
     } catch (error) {
       console.error('Error:', error);
-      setError(error.message || 'Login failed. Please check your credentials.');
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (error.message.includes('buffering timed out') || error.message.includes('not connected')) {
+        errorMessage = 'Database connection error. Please ensure the backend can reach MongoDB Atlas (check IP whitelist).';
+      } else if (error.message.includes('401')) {
+        errorMessage = 'Invalid username or password.';
+      }
+      
+      setError(errorMessage);
     }
   };
 

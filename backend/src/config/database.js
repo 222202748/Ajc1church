@@ -21,7 +21,12 @@ const connectDB = async () => {
 
     return conn;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
+    if (error.message.includes('SSL routines') || error.message.includes('alert internal error')) {
+      console.error('❌ MongoDB Connection Error: Potential IP Whitelist Issue');
+      console.error('👉 Please ensure your current IP address is whitelisted in MongoDB Atlas Network Access.');
+    } else {
+      console.error('❌ MongoDB connection error:', error.message);
+    }
     // Don't exit process here, let the caller handle retries
     throw error;
   }

@@ -9,6 +9,9 @@ const adminSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   lastLogin: Date,
   createdAt: { type: Date, default: Date.now }
+}, {
+  bufferCommands: false, // Disable buffering so it fails fast if DB is not connected
+  timestamps: true
 });
 
 adminSchema.pre('save', async function(next) {
