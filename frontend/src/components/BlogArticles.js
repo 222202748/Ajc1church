@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS, BASE_URL } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
+import { 
+  Share2, 
+  Facebook, 
+  Twitter, 
+  Linkedin, 
+  Mail, 
+  Download, 
+  Heart, 
+  User, 
+  Calendar, 
+  Clock 
+} from 'lucide-react';
 
 const TamilChurchArticle = () => {
   const [article, setArticle] = useState(null);

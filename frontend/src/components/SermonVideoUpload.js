@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Video, Image, X, Play, Pause, Trash2, RefreshCw } from 'lucide-react';
-import { API_ENDPOINTS, BASE_URL } from '../config/api';
-import { isTokenValid, refreshToken, logout } from '../utils/authUtils';
+import { Upload, Video, X, Play, Pause, Trash2, RefreshCw } from 'lucide-react';
+import { BASE_URL } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 
 const SermonVideoUpload = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({});
   const [previewUrls, setPreviewUrls] = useState({});
   const [sermonVideos, setSermonVideos] = useState([]);
   const [loading, setLoading] = useState(true);

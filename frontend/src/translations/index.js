@@ -5,8 +5,6 @@ export const translations = {
       eventTitle: 'Monthly Event',
       successMessage: 'Registration successful! We look forward to seeing you at the event.'
     },
-
-  english: {
     pastors: {
       meetOurPastor: "Meet Our Pastor",
       meetOurPastorDescription: "Meet our pastor, a dedicated leader guiding our community in faith and love.",
@@ -15,18 +13,7 @@ export const translations = {
       pastorDescription: "A dedicated spiritual leader with over 15 years of experience in ministry.",
       callNow: "Call Now",
       whatsapp: "WhatsApp",
-    }
-  },
-  tamil: {
-    pastors: {
-      meetOurPastor: "எங்கள் பாதரியைச் சந்தியுங்கள்",
-      meetOurPastorDescription: "எங்கள் பாதிரி, நம்பிக்கை மற்றும் அன்பில் எங்கள் சமூகத்தை வழிநடத்தும் ஒரு அர்ப்பணிப்புடன் செயல்படும் தலைவரைச் சந்தியுங்கள்.",
-      pastorName: "சிலுவை ராஜா",
-      pastorRole: "பாதிரி",
-      pastorDescription: "15 ஆண்டுகளுக்கும் மேலான ஊழிய அனுபவம் கொண்ட அர்ப்பணிப்புடன் செயல்படும் ஆன்மிகத் தலைவர்.",
-      callNow: "உடனே அழைக்கவும்",
-      whatsapp: "வாட்ஸ்அப்",
-    }},
+    },
 
 
     eventCountdown: {
@@ -42,15 +29,12 @@ export const translations = {
       seconds: 'Secs',
       allEventsButton: 'All Events'
     },
-
     // Navigation
     home: 'Home',
     about: 'About',
     sermons: 'Sermons',
     events: 'Events',
-    blog: 'Blog',
-    pastors: 'Pastors',
-    contact: 'Contact',
+    pastorsNav: 'Pastors',
     admin: 'Admin',
 
     // Header
@@ -112,7 +96,6 @@ export const translations = {
       },
       viewAll: 'View All Articles',
     },
-
     // Testimonials Section
     testimonials: {
       title: 'Testimonials',
@@ -126,7 +109,6 @@ export const translations = {
       maryRole: 'Choir Member',
       maryQuote: 'The worship experience here is amazing. I feel God\'s presence every time we gather together.',
     },
-
     // Contact Section
     contactUs: 'Contact Us',
     message: 'Message',
@@ -190,7 +172,7 @@ export const translations = {
     actsOfKindnessExcerpt: "Small acts of kindness that make a big difference in people's lives...",
     kindnessInActionExcerpt: "Real stories of compassion in our community and how we can all make a difference...",
     churchAddress: '123 Church Street, City, State',
-    workingHours: 'Mon-Sun: 9:00 AM - 6:00 PM',
+    workingHoursLabel: 'Mon-Sun: 9:00 AM - 6:00 PM',
     related: 'Related',
     buyNow: 'Buy Now',
     backToBlog: 'Back to Blog',
@@ -203,6 +185,15 @@ export const translations = {
       title: 'மாதாந்திர நிகழ்வுக்கு பதிவு செய்யவும்',
       eventTitle: 'நடத்தும் மாதாந்திர நிகழ்ச்சியில் கலந்துகொள்ள முன்பதிவு செய்ய அழைக்கப்படுகிறது',
       successMessage: 'பதிவு வெற்றிகரமாக முடிந்தது! நிகழ்வில் உங்களை சந்திப்பதை எதிர்நோக்குகிறோம்.'
+    },
+    pastors: {
+      meetOurPastor: "எங்கள் பாதரியைச் சந்தியுங்கள்",
+      meetOurPastorDescription: "எங்கள் பாதிரி, நம்பிக்கை மற்றும் அன்பில் எங்கள் சமூகத்தை வழிநடத்தும் ஒரு அர்ப்பணிப்புடன் செயல்படும் தலைவரைச் சந்தியுங்கள்.",
+      pastorName: "சிலுவை ராஜா",
+      pastorRole: "பாதிரி",
+      pastorDescription: "15 ஆண்டுகளுக்கும் மேலான ஊழிய அனுபவம் கொண்ட அர்ப்பணிப்புடன் செயல்படும் ஆன்மிகத் தலைவர்.",
+      callNow: "உடனே அழைக்கவும்",
+      whatsapp: "வாட்ஸ்அப்",
     },
 
     eventCountdown: {
@@ -224,9 +215,7 @@ export const translations = {
     about: 'எங்களை பற்றி',
     sermons: 'பிரசங்கங்கள்',
     events: 'நிகழ்வுகள்',
-    blog: 'வலைப்பதிவு',
-    pastors: 'பாஸ்டர்கள்',
-    contact: 'தொடர்பு',
+    pastorsNav: 'பாஸ்டர்கள்',
     admin: 'நிர்வாகி',
 
     // Header
