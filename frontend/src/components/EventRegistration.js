@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import RegistrationForm from './RegistrationForm';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
@@ -7,17 +8,26 @@ import { API_ENDPOINTS } from '../config/api';
 const EventRegistration = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const location = useLocation();
+  const eventData = location.state || {};
 
   const handleSubmit = async (formData) => {
     try {
-      console.log('Submitting registration data:', formData);
+      // Map frontend field 'numberOfPeople' to backend field 'attendeeCount'
+      const dataToSubmit = {
+        ...formData,
+        attendeeCount: formData.numberOfPeople,
+        eventType: eventData.eventTitle || t.eventRegistration.eventTitle || 'General Event'
+      };
+      
+      console.log('Submitting registration data:', dataToSubmit);
       
       const response = await fetch(API_ENDPOINTS.eventRegistration, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSubmit)
       });
 
       if (!response.ok) {
@@ -60,7 +70,7 @@ const EventRegistration = () => {
       <h1>{t.eventRegistration.title}</h1>
       <RegistrationForm
         eventType="event"
-        eventTitle={t.eventRegistration.eventTitle}
+        eventTitle={eventData.eventTitle || t.eventRegistration.eventTitle}
         onSubmit={handleSubmit}
       />
     </div>

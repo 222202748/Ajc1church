@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../translations';
 
 const RegistrationForm = ({ eventType, eventTitle, onSubmit }) => {
+  const { language } = useLanguage();
+  const t = translations[language];
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -95,7 +100,7 @@ const RegistrationForm = ({ eventType, eventTitle, onSubmit }) => {
       <h2>Register for {eventTitle}</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="name">Full Name</label>
+          <label htmlFor="name">{t.fullName}</label>
           <input
             type="text"
             id="name"
@@ -106,7 +111,7 @@ const RegistrationForm = ({ eventType, eventTitle, onSubmit }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t.email}</label>
           <input
             type="email"
             id="email"
@@ -117,7 +122,7 @@ const RegistrationForm = ({ eventType, eventTitle, onSubmit }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="phone">Phone Number</label>
+          <label htmlFor="phone">{t.phone}</label>
           <input
             type="tel"
             id="phone"
@@ -128,7 +133,7 @@ const RegistrationForm = ({ eventType, eventTitle, onSubmit }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="numberOfPeople">Number of People Attending</label>
+          <label htmlFor="numberOfPeople">{t.attendeeCount}</label>
           <input
             type="number"
             id="numberOfPeople"
@@ -143,7 +148,7 @@ const RegistrationForm = ({ eventType, eventTitle, onSubmit }) => {
         </div>
 
         <button type="submit" className="submit-btn">
-          Register Now
+          {t.submit}
         </button>
       </form>
     </div>
