@@ -41,19 +41,33 @@ const requireRole = (roles) => {
 
 // Admin Authentication Routes
 router.post('/login', async (req, res) => {
+  console.log('Login attempt received for:', req.body.username);
   try {
     const { username, password } = req.body;
     
+    if (!username || !password) {
+      console.log('Missing username or password');
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
     const admin = await Admin.findOne({
       $or: [{ username }, { email: username }]
     });
     
-    if (!admin || !admin.isActive) {
+    if (!admin) {
+      console.log('Admin not found:', username);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    if (!admin.isActive) {
+      console.log('Admin account inactive:', username);
+      return res.status(401).json({ error: 'Account is inactive' });
+    }
     
+    console.log('Admin found, comparing password...');
     const isMatch = await admin.comparePassword(password);
     if (!isMatch) {
+      console.log('Password mismatch for:', username);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
@@ -61,12 +75,18 @@ router.post('/login', async (req, res) => {
     admin.lastLogin = new Date();
     await admin.save();
     
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is missing in environment variables');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
     const token = jwt.sign(
       { id: admin._id, role: admin.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     
+    console.log('Login successful for:', username);
     res.json({
       success: true,
       token,
@@ -79,8 +99,8 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Login error details:', error);
+    res.status(500).json({ error: 'Login failed: ' + error.message });
   }
 });
 

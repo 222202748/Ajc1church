@@ -197,6 +197,7 @@ ensureUploadDirs();
 
 // Routes
 app.use('/api/admin', adminRoutes.router);
+app.get('/api/admin/check', (req, res) => res.json({ status: 'Admin routes active' }));
 app.use('/api/blog', blogRoutes);
 app.use('/api/eventregistration', eventRegistrationRoutes);
 app.use('/api/upload', uploadRoutes);
