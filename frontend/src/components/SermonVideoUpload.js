@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Video, Image, X, Play, Pause, Trash2, RefreshCw } from 'lucide-react';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, BASE_URL } from '../config/api';
 import { isTokenValid, refreshToken, logout } from '../utils/authUtils';
 import axiosInstance from '../utils/axiosConfig';
-
-const API_BASE_URL = 'http://localhost:5000';
 
 const SermonVideoUpload = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -25,7 +23,7 @@ const SermonVideoUpload = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axiosInstance.get('http://localhost:5000/api/upload/videos/list');
+      const response = await axiosInstance.get(`${BASE_URL}/api/upload/videos/list`);
 
       const data = response.data;
       console.log('Fetched videos data:', data);
@@ -95,9 +93,9 @@ const SermonVideoUpload = () => {
         headers.append('Authorization', `Bearer ${token}`);
       }
       
-      console.log('Sending to backend URL:', 'http://localhost:5000/api/upload/videos');
+      console.log('Sending to backend URL:', `${BASE_URL}/api/upload/videos`);
       
-      const response = await fetch('http://localhost:5000/api/upload/videos', {
+      const response = await fetch(`${BASE_URL}/api/upload/videos`, {
         method: 'POST',
         headers: headers,
         body: formData
@@ -132,7 +130,7 @@ const SermonVideoUpload = () => {
   const deleteVideo = async (filename) => {
     if (window.confirm(`Are you sure you want to delete the sermon video "${filename}"?`)) {
       try {
-        await axiosInstance.delete(`http://localhost:5000/api/upload/video/${encodeURIComponent(filename)}`);
+        await axiosInstance.delete(`${BASE_URL}/api/upload/video/${encodeURIComponent(filename)}`);
 
         alert('Sermon video deleted successfully!');
         fetchSermonVideos();
@@ -325,7 +323,7 @@ const SermonVideoUpload = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-24 h-16 bg-gray-100 rounded overflow-hidden">
                         <video 
-                           src={`${API_BASE_URL}${video.url}`} 
+                           src={`${BASE_URL}${video.url}`} 
                            className="w-full h-full object-cover"
                           />
                       </div>
@@ -342,7 +340,7 @@ const SermonVideoUpload = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <a 
-                           href={`${API_BASE_URL}${video.url}`} 
+                           href={`${BASE_URL}${video.url}`} 
                            target="_blank" 
                            rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100"

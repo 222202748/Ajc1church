@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Share2, Heart, MessageCircle, Edit, Trash2, Plus, Download, Search, Filter, RefreshCw, Eye, FileText, Video, Tag } from 'lucide-react';
-import { API_ENDPOINTS, getAuthHeader } from '../config/api';
+import { API_ENDPOINTS, getAuthHeader, BASE_URL } from '../config/api';
 
 const BlogAdmin = () => {
   const [articles, setArticles] = useState([]);
@@ -271,7 +271,7 @@ const BlogAdmin = () => {
     if (article.featuredImage) {
       setImagePreview(article.featuredImage.startsWith('http') 
         ? article.featuredImage 
-        : `http://localhost:5000${article.featuredImage}`);
+        : `${BASE_URL}${article.featuredImage}`);
     } else {
       setImagePreview(null);
     }
@@ -462,7 +462,7 @@ const BlogAdmin = () => {
                             <img 
                               src={article.featuredImage.startsWith('http') 
                                 ? article.featuredImage 
-                                : `http://localhost:5000${article.featuredImage}`} 
+                                : `${BASE_URL}${article.featuredImage}`} 
                               alt={article.title} 
                               className="h-10 w-10 object-cover"
                             />
@@ -894,7 +894,7 @@ const BlogAdmin = () => {
               <img 
                 src={selectedArticle.featuredImage.startsWith('http') 
                   ? selectedArticle.featuredImage 
-                  : `http://localhost:5000${selectedArticle.featuredImage}`} 
+                  : `${BASE_URL}${selectedArticle.featuredImage}`} 
                 alt={selectedArticle.title} 
                 className="w-full h-full object-cover"
               />

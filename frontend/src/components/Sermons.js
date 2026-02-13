@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import axiosInstance from '../utils/axiosConfig';
-
-const API_BASE_URL = 'http://localhost:5000';
+import { BASE_URL } from '../config/api';
 
 const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbnail }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [mediaError, setMediaError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const videoRef = useRef(null);
+  
+  const fullVideoUrl = videoUrl ? (videoUrl.startsWith('http') ? videoUrl : `${BASE_URL}${videoUrl}`) : '';
+  const fullThumbnailUrl = thumbnail ? (thumbnail.startsWith('http') ? thumbnail : `${BASE_URL}${thumbnail}`) : '';
   
   const togglePlay = async () => {
     const video = videoRef.current;
@@ -216,7 +218,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
     if (!url) return null;
     if (url.startsWith('http')) return url;
     let cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    if (cleanUrl.startsWith('/api')) return `${API_BASE_URL}${cleanUrl}`;
+    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
     return cleanUrl;
   };
 
@@ -224,12 +226,21 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
     if (!url) return null;
     if (url.startsWith('http')) return url;
     let cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    if (cleanUrl.startsWith('/api')) return `${API_BASE_URL}${cleanUrl}`;
+    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
+    return cleanUrl;
+  };
+
+  const getThumbnailUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    let cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
     return cleanUrl;
   };
 
   const finalVideoUrl = getVideoUrl(videoUrl);
   const finalAudioUrl = getAudioUrl(audioUrl);
+  const finalThumbnailUrl = getThumbnailUrl(thumbnail);
 
   const getShareUrl = () => {
     if (!videoUrl) return null;
@@ -294,7 +305,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
                 ref={videoRef}
                 className="card-img img-fluid w-100 h-100" 
                 style={{ objectFit: 'cover' }} 
-                poster={thumbnail || ''}
+                poster={finalThumbnailUrl || ''}
                 {...handleVideoEvents}
                 preload="metadata"
                 playsInline

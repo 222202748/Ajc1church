@@ -1,4 +1,5 @@
-const API_BASE_URL = 'https://ajc1church-2.onrender.com/api';
+export const BASE_URL = 'https://ajc1church-2.onrender.com';
+const API_BASE_URL = `${BASE_URL}/api`;
 
 export const API_ENDPOINTS = {
   auth: `${API_BASE_URL}/admin`,

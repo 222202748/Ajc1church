@@ -42,7 +42,13 @@ const fetchWrapper = {
           }
         }
         
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP error! status: ${response.status}` };
+        }
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
@@ -95,7 +101,13 @@ const fetchWrapper = {
           }
         }
         
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP error! status: ${response.status}` };
+        }
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
@@ -144,7 +156,13 @@ const fetchWrapper = {
           }
         }
         
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP error! status: ${response.status}` };
+        }
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
       }
       
       return { status: response.status };
@@ -184,7 +202,13 @@ const fetchWrapper = {
             throw new Error('Authentication failed');
           }
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP error! status: ${response.status}` };
+        }
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       return { data, status: response.status };

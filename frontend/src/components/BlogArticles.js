@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Clock, Share2, Heart, MessageCircle, Phone, Download, Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
+import { API_ENDPOINTS, BASE_URL } from '../config/api';
 
 const TamilChurchArticle = () => {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showShareOptions, setShowShareOptions] = useState(false);
-  
-  // Use the actual API endpoint from config
-  const API_ENDPOINTS = {
-    blogArticles: 'http://localhost:5000/api/blog'
-  };
   
   // Fetch the latest article on component mount
   useEffect(() => {

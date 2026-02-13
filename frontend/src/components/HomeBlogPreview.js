@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, User, ArrowRight } from 'lucide-react';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, BASE_URL } from '../config/api';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
 
@@ -95,7 +95,7 @@ const HomeBlogPreview = () => {
                     <img 
                       src={article.featuredImage.startsWith('http') 
                         ? article.featuredImage 
-                        : `http://localhost:5000${article.featuredImage}`} 
+                        : `${BASE_URL}${article.featuredImage}`} 
                       alt={article.title} 
                       className="w-full h-full object-cover"
                     />
