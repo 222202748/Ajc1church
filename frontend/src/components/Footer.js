@@ -44,7 +44,7 @@ const Footer = () => {
                 <h6 className="fw-bold">{t.footer?.quickLinks || 'Quick Links'}</h6>
                 <ul className="list-unstyled small">
                   <li><a href="/" className="text-light text-decoration-none">{t.home || 'Home'}</a></li>
-                  <li><a href="/pastors" className="text-light text-decoration-none">{t.pastors || 'Pastors'}</a></li>
+                  <li><a href="/pastors" className="text-light text-decoration-none">{t.pastorsNav || 'Pastors'}</a></li>
                   <li><a href="/sermons" className="text-light text-decoration-none">{t.sermons || 'Sermons'}</a></li>
                   <li><a href="/events" className="text-light text-decoration-none">{t.events || 'Events'}</a></li>
                   {/* Contact link removed as requested */}

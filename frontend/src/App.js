@@ -27,8 +27,7 @@ import PrayerRequest from './components/PrayerRequest';
 import ServiceSchedule from './components/ServiceSchedule';
 import Sermons from './components/Sermons';
 import ProtectedRoute from './components/ProtectedRoute';
-
-
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Home = () => (
   <>
@@ -43,29 +42,31 @@ const Home = () => (
 
 function App() {
   return (
-    <LanguageProvider>
-      <div className="App">
-        <AwakenurNavbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:id" element={<BlogArticle />} />
-          <Route path="/pastors" element={<Pastors />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/donate" element={<Donation />} />
-          <Route path="/prayer-request" element={<PrayerRequest />} />
-          <Route path="/service-schedule" element={<ServiceSchedule />} />
-          <Route path="/sermons" element={<Sermons />} />
-          <Route path="/Admin" element={<Adminlogin />} />
-          <Route path="/Admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/Admin/blog" element={<ProtectedRoute><BlogAdmin /></ProtectedRoute>} />
-          <Route path="/Admin/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
-          <Route path="/event-registration" element={<EventRegistration />} />
-        </Routes>
-        <Footer />
-      </div>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <div className="App">
+          <AwakenurNavbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogArticle />} />
+            <Route path="/pastors" element={<Pastors />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/donate" element={<Donation />} />
+            <Route path="/prayer-request" element={<PrayerRequest />} />
+            <Route path="/service-schedule" element={<ServiceSchedule />} />
+            <Route path="/sermons" element={<Sermons />} />
+            <Route path="/Admin" element={<Adminlogin />} />
+            <Route path="/Admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/Admin/blog" element={<ProtectedRoute><BlogAdmin /></ProtectedRoute>} />
+            <Route path="/Admin/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
+            <Route path="/event-registration" element={<EventRegistration />} />
+          </Routes>
+          <Footer />
+        </div>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }
 
