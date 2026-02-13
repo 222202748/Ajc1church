@@ -1,10 +1,18 @@
 import { refreshToken, logout, isTokenValid } from './authUtils';
-import { getAuthHeader } from '../config/api';
+import { getAuthHeader, BASE_URL } from '../config/api';
+
+// Helper to ensure URL is absolute
+const getFullUrl = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${BASE_URL}${cleanUrl}`;
+};
 
 // Custom fetch wrapper with similar API to axios
 const fetchWrapper = {
   // GET request
   get: async (url, options = {}) => {
+    const fullUrl = getFullUrl(url);
     const requiresAuth = options.requiresAuth !== false;
     try {
       // Check if token is valid, try to refresh if needed
@@ -18,7 +26,7 @@ const fetchWrapper = {
       }
       
       // Use the full URL as provided from API_ENDPOINTS
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -61,6 +69,7 @@ const fetchWrapper = {
   
   // POST request
   post: async (url, body, options = {}) => {
+    const fullUrl = getFullUrl(url);
     const requiresAuth = options.requiresAuth !== false;
     try {
       // Check if token is valid, try to refresh if needed
@@ -76,7 +85,7 @@ const fetchWrapper = {
       const isFormData = body instanceof FormData;
       
       // Use the full URL as provided from API_ENDPOINTS
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           ...(!isFormData && { 'Content-Type': 'application/json' }),
@@ -120,6 +129,7 @@ const fetchWrapper = {
   
   // DELETE request
   delete: async (url, options = {}) => {
+    const fullUrl = getFullUrl(url);
     const requiresAuth = options.requiresAuth !== false;
     try {
       // Check if token is valid, try to refresh if needed
@@ -132,7 +142,7 @@ const fetchWrapper = {
         }
       }
       
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -174,6 +184,7 @@ const fetchWrapper = {
   ,
   // PATCH request
   patch: async (url, body, options = {}) => {
+    const fullUrl = getFullUrl(url);
     const requiresAuth = options.requiresAuth !== false;
     try {
       if (requiresAuth && !isTokenValid()) {
@@ -184,7 +195,7 @@ const fetchWrapper = {
         }
       }
       const isFormData = body instanceof FormData;
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'PATCH',
         headers: {
           ...(!isFormData && { 'Content-Type': 'application/json' }),

@@ -19,7 +19,8 @@ import {
   BookOpen,
   Gift
 } from 'lucide-react';
-import { API_ENDPOINTS, getAuthHeader } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const DonationDashboard = () => {
   const [donations, setDonations] = useState([]);
@@ -56,20 +57,8 @@ const DonationDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(API_ENDPOINTS.adminDonations, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setDonations(data.donations || []);
+      const response = await axiosInstance.get(API_ENDPOINTS.adminDonations);
+      setDonations(response.data.donations || []);
     } catch (error) {
       console.error('Error fetching donations:', error);
       setError('Failed to load donations. Please try again.');
@@ -80,19 +69,8 @@ const DonationDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.donationStats, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const response = await axiosInstance.get(API_ENDPOINTS.donationStats);
+      const data = response.data;
       setStats(data.stats || {});
       setPurposeStats(data.purposeStats || []);
     } catch (error) {
@@ -176,23 +154,12 @@ const DonationDashboard = () => {
 
   const handleStatusUpdate = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.adminDonations}/${selectedDonation._id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          notes: statusNotes
-        })
+      const response = await axiosInstance.patch(`${API_ENDPOINTS.adminDonations}/${selectedDonation._id}/status`, {
+        status: newStatus,
+        notes: statusNotes
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       // Update the donation in the list
       setDonations(prev => prev.map(donation => 

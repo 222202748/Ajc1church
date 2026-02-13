@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { API_ENDPOINTS, getAuthHeader } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 import { User, Lock, Save, AlertCircle, CheckCircle } from 'lucide-react';
 
 const AdminProfile = () => {
@@ -22,29 +23,11 @@ const AdminProfile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_ENDPOINTS.admin}/profile`, {
-          method: 'GET',
-          headers: {
-            ...getAuthHeader(),
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to fetch profile');
-          } else {
-            throw new Error(`Server error: ${response.status} ${response.statusText}`);
-          }
-        }
-
-        const data = await response.json();
-        setProfile(data.admin);
+        const response = await axiosInstance.get(`${API_ENDPOINTS.admin}/profile`);
+        setProfile(response.data.admin);
       } catch (error) {
         console.error('Error fetching profile:', error);
-        setError(error.message || 'Failed to fetch profile');
+        setError(error.response?.data?.error || error.message || 'Failed to fetch profile');
       } finally {
         setLoading(false);
       }
@@ -80,45 +63,20 @@ const AdminProfile = () => {
     }
 
     try {
-      const response = await fetch(`${API_ENDPOINTS.admin}/change-password`, {
-        method: 'POST',
-        headers: {
-          ...getAuthHeader(),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
+      const response = await axiosInstance.post(`${API_ENDPOINTS.admin}/change-password`, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
       });
       
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to change password');
-        } else {
-          throw new Error(`Server error: ${response.status} ${response.statusText}`);
-        }
-      }
-
-      const data = await response.json();
-
-      // Reset form and show success message
+      setPasswordSuccess(response.data.message || 'Password updated successfully');
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      setPasswordSuccess('Password changed successfully');
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setPasswordSuccess(null);
-      }, 3000);
     } catch (error) {
       console.error('Error changing password:', error);
-      setPasswordError(error.message || 'Failed to change password');
+      setPasswordError(error.response?.data?.error || error.message || 'Failed to change password');
     }
   };
 

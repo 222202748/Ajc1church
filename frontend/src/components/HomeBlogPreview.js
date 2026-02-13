@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, User, ArrowRight } from 'lucide-react';
 import { API_ENDPOINTS, BASE_URL } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
 
@@ -32,13 +33,9 @@ const HomeBlogPreview = () => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_ENDPOINTS.blogArticles}?limit=3`);
+        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}?limit=3`, { requiresAuth: false });
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = response.data;
         if (data.success && data.blogs) {
           setArticles(data.blogs);
         } else {

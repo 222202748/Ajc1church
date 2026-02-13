@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Share2, Heart, MessageCircle, Edit, Trash2, Plus, Download, Search, Filter, RefreshCw, Eye, FileText, Video, Tag } from 'lucide-react';
-import { API_ENDPOINTS, getAuthHeader, BASE_URL } from '../config/api';
+import { API_ENDPOINTS, BASE_URL } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const BlogAdmin = () => {
   const [articles, setArticles] = useState([]);
@@ -38,20 +39,8 @@ const BlogAdmin = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_ENDPOINTS.blogArticles}/admin/all`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setArticles(data.blogs || []);
+      const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}/admin/all`);
+      setArticles(response.data.blogs || []);
     } catch (error) {
       console.error('Error fetching articles:', error);
       setError('Failed to load articles. Please try again.');
@@ -165,23 +154,15 @@ const BlogAdmin = () => {
         ? `${API_ENDPOINTS.blogArticles}/admin/update/${selectedArticle._id}`
         : `${API_ENDPOINTS.blogArticles}/admin/create-with-media`;
       
-      const method = selectedArticle ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          ...getAuthHeader()
-          // Note: Don't set Content-Type with FormData
-        },
-        body: formDataToSend
-      });
+      const response = selectedArticle 
+        ? await axiosInstance.put(url, formDataToSend, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+        : await axiosInstance.post(url, formDataToSend, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       // Update state based on action
       if (selectedArticle) {
@@ -227,25 +208,14 @@ const BlogAdmin = () => {
     if (window.confirm('Are you sure you want to delete this article?')) {
       try {
         setLoading(true);
-        
-        const response = await fetch(`${API_ENDPOINTS.blogArticles}/admin/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeader()
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        await axiosInstance.delete(`${API_ENDPOINTS.blogArticles}/admin/${id}`);
 
         // Remove the deleted article from the state
         setArticles(prev => prev.filter(article => article._id !== id));
         alert('Article deleted successfully!');
       } catch (error) {
         console.error('Error deleting article:', error);
-        alert(`Failed to delete article: ${error.message}`);
+        alert(`Failed to delete article: ${error.response?.data?.error || error.message}`);
       } finally {
         setLoading(false);
       }

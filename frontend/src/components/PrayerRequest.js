@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Send, Check, Bell } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { API_ENDPOINTS } from '../config/api';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 const PrayerRequest = () => {
   const { language } = useLanguage();
@@ -86,7 +86,7 @@ const PrayerRequest = () => {
   const notifyAdmin = async (requestData) => {
     try {
       // Use the admin endpoint to send notification
-      await axios.post(`${API_ENDPOINTS.admin}/notifications`, {
+      await axiosInstance.post(`${API_ENDPOINTS.admin}/notifications`, {
         type: 'prayer_request',
         message: `New prayer request from ${requestData.name}`,
         details: {
@@ -97,12 +97,11 @@ const PrayerRequest = () => {
           timestamp: new Date().toISOString()
         },
         priority: 'high'
-      });
+      }, { requiresAuth: false });
+      
       console.log('Admin notification sent successfully');
-      return true;
-    } catch (error) {
-      console.error('Failed to send admin notification:', error);
-      return false;
+    } catch (err) {
+      console.error('Error sending admin notification:', err);
     }
   };
   

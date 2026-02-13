@@ -4,6 +4,7 @@ import RegistrationForm from './RegistrationForm';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
 import { API_ENDPOINTS } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const EventRegistration = () => {
   const { language } = useLanguage();
@@ -22,30 +23,13 @@ const EventRegistration = () => {
       
       console.log('Submitting registration data:', dataToSubmit);
       
-      const response = await fetch(API_ENDPOINTS.eventRegistration, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSubmit)
-      });
+      const response = await axiosInstance.post(API_ENDPOINTS.eventRegistration, dataToSubmit, { requiresAuth: false });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Server response:', errorData);
-        throw new Error(`Registration failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Registration successful:', result);
+      console.log('Registration successful:', response.data);
       alert(t.eventRegistration.successMessage || 'Registration successful!');
     } catch (error) {
       console.error('Registration error:', error);
-      if (error.message.includes('Failed to fetch')) {
-        alert('Unable to connect to server. Please check if the backend is running.');
-      } else {
-        alert(`Registration failed: ${error.message}. Please try again.`);
-      }
+      alert(`Registration failed: ${error.response?.data?.error || error.message}. Please try again.`);
     }
   };
 

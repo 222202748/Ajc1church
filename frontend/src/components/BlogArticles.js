@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS, BASE_URL } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const TamilChurchArticle = () => {
   const [article, setArticle] = useState(null);
@@ -14,13 +15,9 @@ const TamilChurchArticle = () => {
         setLoading(true);
         
         // Make a real API call to get the latest published article
-        const response = await fetch(`${API_ENDPOINTS.blogArticles}/latest`);
+        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}/latest`, { requiresAuth: false });
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = response.data;
         if (data.blog) {
           setArticle(data.blog);
         } else {

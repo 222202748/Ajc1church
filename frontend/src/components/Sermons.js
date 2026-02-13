@@ -9,8 +9,17 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
   const [isSaved, setIsSaved] = useState(false);
   const videoRef = useRef(null);
   
-  const fullVideoUrl = videoUrl ? (videoUrl.startsWith('http') ? videoUrl : `${BASE_URL}${videoUrl}`) : '';
-  const fullThumbnailUrl = thumbnail ? (thumbnail.startsWith('http') ? thumbnail : `${BASE_URL}${thumbnail}`) : '';
+  const getMediaUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
+    return cleanUrl;
+  };
+
+  const finalVideoUrl = getMediaUrl(videoUrl);
+  const finalAudioUrl = getMediaUrl(audioUrl);
+  const finalThumbnailUrl = getMediaUrl(thumbnail);
   
   const togglePlay = async () => {
     const video = videoRef.current;
@@ -214,39 +223,8 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
     e.target.src = 'https://via.placeholder.com/600x400/8B4513/ffffff?text=No+Preview+Available';
   };
 
-  const getVideoUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    let cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
-    return cleanUrl;
-  };
-
-  const getAudioUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    let cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
-    return cleanUrl;
-  };
-
-  const getThumbnailUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    let cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
-    return cleanUrl;
-  };
-
-  const finalVideoUrl = getVideoUrl(videoUrl);
-  const finalAudioUrl = getAudioUrl(audioUrl);
-  const finalThumbnailUrl = getThumbnailUrl(thumbnail);
-
   const getShareUrl = () => {
-    if (!videoUrl) return null;
-    if (videoUrl.startsWith('http')) return videoUrl;
-    const path = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
-    return `${window.location.origin}${path}`;
+    return finalVideoUrl;
   };
 
   useEffect(() => {

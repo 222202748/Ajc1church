@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, User, ArrowLeft, Tag, Share2, Heart } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const BlogArticle = () => {
   const { id } = useParams();
@@ -14,13 +15,9 @@ const BlogArticle = () => {
     const fetchArticle = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_ENDPOINTS.blogArticles}/${id}`);
+        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}/${id}`, { requiresAuth: false });
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = response.data;
         if (data.success && data.blog) {
           setArticle(data.blog);
           // After getting the article, fetch related articles
@@ -39,13 +36,9 @@ const BlogArticle = () => {
     const fetchRelatedArticles = async (category, currentId) => {
       try {
         // Fetch articles in the same category, excluding the current one
-        const response = await fetch(`${API_ENDPOINTS.blogArticles}?category=${category}&limit=3`);
+        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}?category=${category}&limit=3`, { requiresAuth: false });
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = response.data;
         if (data.success && data.blogs) {
           // Filter out the current article
           const filtered = data.blogs.filter(blog => blog._id !== currentId);

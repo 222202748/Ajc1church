@@ -23,7 +23,7 @@ const SermonVideoUpload = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axiosInstance.get(`${BASE_URL}/api/upload/videos/list`);
+      const response = await axiosInstance.get('/api/upload/videos/list');
 
       const data = response.data;
       console.log('Fetched videos data:', data);
@@ -86,28 +86,13 @@ const SermonVideoUpload = () => {
     try {
       console.log('Uploading videos...');
       
-      // Try direct fetch instead of using axiosInstance
-      const token = localStorage.getItem('token');
-      const headers = new Headers();
-      if (token) {
-        headers.append('Authorization', `Bearer ${token}`);
-      }
-      
-      console.log('Sending to backend URL:', `${BASE_URL}/api/upload/videos`);
-      
-      const response = await fetch(`${BASE_URL}/api/upload/videos`, {
-        method: 'POST',
-        headers: headers,
-        body: formData
+      const response = await axiosInstance.post('/api/upload/videos', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, Details: ${errorText}`);
-      }
-      
-      const result = await response.json();
+      const result = response.data;
       console.log('Upload success data:', result);
       
       // Clear selected files after successful upload
@@ -121,7 +106,7 @@ const SermonVideoUpload = () => {
       fetchSermonVideos();
     } catch (error) {
       console.error('Upload error details:', error);
-      alert(`Upload failed: ${error.message}. Check console for details.`);
+      alert(`Upload failed: ${error.response?.data?.error || error.message}. Check console for details.`);
     } finally {
       setUploading(false);
     }
@@ -130,7 +115,7 @@ const SermonVideoUpload = () => {
   const deleteVideo = async (filename) => {
     if (window.confirm(`Are you sure you want to delete the sermon video "${filename}"?`)) {
       try {
-        await axiosInstance.delete(`${BASE_URL}/api/upload/video/${encodeURIComponent(filename)}`);
+        await axiosInstance.delete(`/api/upload/video/${encodeURIComponent(filename)}`);
 
         alert('Sermon video deleted successfully!');
         fetchSermonVideos();
