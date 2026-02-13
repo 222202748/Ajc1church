@@ -4,33 +4,26 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const mongoOptions = {
-      serverSelectionTimeoutMS: 10000, // Increased timeout from 5s to 10s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      family: 4, // Use IPv4, skip trying IPv6
-      maxPoolSize: 10 // Maintain up to 10 socket connections
-      // Removed deprecated options: autoReconnect, reconnectTries, reconnectInterval, useNewUrlParser, useUnifiedTopology
-      // MongoDB driver now handles reconnection and parsing automatically in newer versions
-      // See: https://mongoosejs.com/docs/connections.html#connection-events
+      serverSelectionTimeoutMS: 15000, // Increased timeout for Atlas
+      socketTimeoutMS: 45000,
+      maxPoolSize: 50, // Increased pool size for better performance
+      autoIndex: true,
     };
 
     const conn = await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/church_donations',
+      process.env.MONGODB_URI,
       mongoOptions
     );
 
     console.log('✅ Connected to MongoDB');
     console.log(`📊 Database: ${conn.connection.name}`);
-    console.log(`🌐 Host: ${conn.connection.host}:${conn.connection.port}`);
+    console.log(`🌐 Host: ${conn.connection.host}`);
 
     return conn;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    console.log('⚠️  Please ensure MongoDB is running on your system');
-    console.log('💡 To start MongoDB:');
-    console.log('   - Windows: net start MongoDB (or mongod --dbpath C:\\data\\db)');
-    console.log('   - macOS/Linux: sudo systemctl start mongod (or mongod --dbpath /data/db)');
-    console.log('   - Docker: docker run -d -p 27017:27017 --name mongodb mongo:latest');
-    process.exit(1);
+    // Don't exit process here, let the caller handle retries
+    throw error;
   }
 };
 
@@ -38,20 +31,10 @@ const connectDB = async () => {
 const setupConnectionEvents = () => {
   mongoose.connection.on('error', (err) => {
     console.error('❌ MongoDB connection error:', err);
-    // Attempt to reconnect after error
-    setTimeout(() => {
-      console.log('🔄 Attempting to reconnect to MongoDB...');
-      connectDB().catch(err => console.error('Failed reconnection attempt:', err));
-    }, 5000);
   });
 
   mongoose.connection.on('disconnected', () => {
     console.log('⚠️  MongoDB disconnected');
-    // Attempt to reconnect after disconnection
-    setTimeout(() => {
-      console.log('🔄 Attempting to reconnect to MongoDB after disconnection...');
-      connectDB().catch(err => console.error('Failed reconnection attempt:', err));
-    }, 5000);
   });
 
   mongoose.connection.on('reconnected', () => {
@@ -62,17 +45,21 @@ const setupConnectionEvents = () => {
     console.log('🔒 MongoDB connection closed');
   });
 
-  // Handle application termination
-  process.on('SIGINT', async () => {
+  // Handle application termination signals
+  const gracefulShutdown = async (signal) => {
     try {
+      console.log(`\nReceived ${signal}. Closing MongoDB connection...`);
       await mongoose.connection.close();
       console.log('🔒 MongoDB connection closed through app termination');
       process.exit(0);
     } catch (error) {
-      console.error('Error closing MongoDB connection:', error);
+      console.error('Error during graceful shutdown:', error);
       process.exit(1);
     }
-  });
+  };
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 };
 
 // Check if MongoDB is running
