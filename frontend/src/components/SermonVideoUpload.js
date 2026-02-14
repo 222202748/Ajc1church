@@ -306,7 +306,7 @@ const SermonVideoUpload = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-24 h-16 bg-gray-100 rounded overflow-hidden">
                         <video 
-                           src={`${BASE_URL}${video.url}`} 
+                           src={`${BASE_URL}${video.videoUrl || video.url}`} 
                            className="w-full h-full object-cover"
                           />
                       </div>
@@ -323,7 +323,7 @@ const SermonVideoUpload = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <a 
-                           href={`${BASE_URL}${video.url}`} 
+                           href={`${BASE_URL}${video.videoUrl || video.url}`} 
                            target="_blank" 
                            rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100"

@@ -28,6 +28,10 @@ const sermonSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  url: {
+    type: String,
+    trim: true
+  },
   audioUrl: {
     type: String,
     trim: true
