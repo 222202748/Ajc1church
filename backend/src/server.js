@@ -9,6 +9,19 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+// Validate required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
+  console.error('👉 Please set these variables in your .env file or production environment (e.g., Render Dashboard).');
+  // In production, we should probably exit, but let's just log for now to avoid crashing unexpectedly
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('⚠️ Server starting in production with missing environment variables. Some features will fail.');
+  }
+}
+
 // Import database configuration
 const { connectDB, setupConnectionEvents, retryConnection } = require('./config/database');
 

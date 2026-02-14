@@ -33,8 +33,12 @@ const AdminLogin = () => {
       
       if (error.message.includes('buffering timed out') || error.message.includes('not connected')) {
         errorMessage = 'Database connection error. Please ensure the backend can reach MongoDB Atlas (check IP whitelist).';
-      } else if (error.message.includes('401')) {
+      } else if (error.message.toLowerCase().includes('invalid credentials') || error.message.includes('401')) {
         errorMessage = 'Invalid username or password.';
+      } else if (error.message.includes('Server configuration error')) {
+        errorMessage = 'Server configuration error. Please ensure all environment variables (like JWT_SECRET) are set on the production server.';
+      } else {
+        errorMessage = error.message || 'Login failed. Please check your credentials.';
       }
       
       setError(errorMessage);
