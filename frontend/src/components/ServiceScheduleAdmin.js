@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Calendar, Clock, MapPin, Edit, Trash2, Plus, RefreshCw, Save, X, Info } from 'lucide-react';
+import { Edit, Trash2, Plus, RefreshCw, Save, X, Info } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 import { useLanguage } from '../contexts/LanguageContext';
