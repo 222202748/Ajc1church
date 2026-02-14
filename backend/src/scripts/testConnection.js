@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const { connectDB, setupConnectionEvents, retryConnection } = require('../config/database');
+const { setupConnectionEvents, retryConnection } = require('../config/database');
 
 console.log('🔍 Testing MongoDB connection...');
 

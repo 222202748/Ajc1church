@@ -6,11 +6,7 @@ const { authenticateAdmin } = require('./admin');
 const Sermon = require('../models/Sermon');
 const router = express.Router();
 
-// Serve uploaded videos
-router.use('/videos', express.static(path.join(__dirname, '../../uploads/videos')));
-
-// Serve uploaded images (if not already served by blog routes)
-router.use('/images', express.static(path.join(__dirname, '../../uploads/blog-images')));
+// Static serving is now handled in server.js to ensure proper headers and priority
 
 // Upload single video
 router.post('/video', authenticateAdmin, videoUpload.single('video'), async (req, res) => {

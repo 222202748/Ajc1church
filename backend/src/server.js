@@ -3,14 +3,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const PDFDocument = require('pdfkit');
+// const nodemailer = require('nodemailer');
+// const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
 // Validate required environment variables
-const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'];
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS', 'CHURCH_EMAIL'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
@@ -23,7 +23,7 @@ if (missingEnvVars.length > 0) {
 }
 
 // Import database configuration
-const { connectDB, setupConnectionEvents, retryConnection } = require('./config/database');
+const { setupConnectionEvents, retryConnection } = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +32,18 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from the uploads directory
+app.use('/api/upload/videos', express.static(path.join(__dirname, '../uploads/videos'), {
+  setHeaders: (res, _path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+    res.set('Accept-Ranges', 'bytes');
+  }
+}));
+app.use('/api/upload/images', express.static(path.join(__dirname, '../uploads/blog-images')));
+app.use('/api/upload/misc', express.static(path.join(__dirname, '../uploads/misc')));
 
 // Initialize database connection with retry mechanism
 (async () => {
@@ -96,9 +108,7 @@ donationSchema.pre('save', async function(next) {
 
 const Donation = mongoose.model('Donation', donationSchema);
 
-// Sermon model is already exported from its file
-const Sermon = require('./models/Sermon');
-
+/*
 // Email Configuration
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -107,8 +117,10 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   }
 });
+*/
 
-// Helper Functions
+// Helper Functions (Currently unused)
+/*
 const generateReceiptPDF = async (donation) => {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
@@ -182,6 +194,7 @@ const sendReceiptEmail = async (donation, receiptPath) => {
   
   await transporter.sendMail(mailOptions);
 };
+*/
 
 // Import Routes
 const adminRoutes = require('./routes/admin');
