@@ -190,6 +190,15 @@ const JesusVersesPopup = () => {
     setIsOpen(false);
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+      showTodayVerse();
+    }, 1000); // 1 second delay before showing popup
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const showTodayVerse = () => {
     const today = new Date();
     setCurrentVerseIndex(today.getDate() % verses.length);
@@ -339,12 +348,3 @@ const JesusVersesPopup = () => {
 };
 
 export default JesusVersesPopup;
-
-// Add new useEffect to auto-open popup on mount
-useEffect(() => {
-  const timer = setTimeout(() => {
-    openPopup();
-  }, 1000); // 1 second delay before showing popup
-
-  return () => clearTimeout(timer);
-}, []); // Empty dependency array means this runs once on mount

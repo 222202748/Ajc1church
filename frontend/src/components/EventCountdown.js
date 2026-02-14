@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
-
-// ✅ Define the target date once outside the component
-const targetDate = (() => {
-  const date = new Date();
-  date.setDate(date.getDate() + 4); // 13 days from now
-  date.setHours(18, 0, 0, 0); // 6:00 PM
-  return date;
-})();
+import axiosInstance from '../utils/axiosConfig';
 
 const EventCountdown = () => {
   const { language } = useLanguage();
   const t = translations[language]?.eventCountdown;
+  const [nextEvent, setNextEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
   
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -22,9 +17,40 @@ const EventCountdown = () => {
   });
 
   useEffect(() => {
+    const fetchNextEvent = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get('/api/events');
+        const events = response.data;
+        
+        if (events && events.length > 0) {
+          // Sort events by date and find the closest future event
+          const now = new Date();
+          const futureEvents = events
+            .map(e => ({ ...e, dateObj: new Date(e.date) }))
+            .filter(e => e.dateObj > now)
+            .sort((a, b) => a.dateObj - b.dateObj);
+          
+          if (futureEvents.length > 0) {
+            setNextEvent(futureEvents[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching next event:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNextEvent();
+  }, []);
+
+  useEffect(() => {
+    if (!nextEvent) return;
+
     const calculateTimeLeft = () => {
       const now = new Date().getTime();
-      const target = targetDate.getTime();
+      const target = new Date(nextEvent.date).getTime();
       const difference = target - now;
 
       if (difference > 0) {
@@ -42,7 +68,7 @@ const EventCountdown = () => {
     calculateTimeLeft();
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextEvent]);
 
   const formatNumber = (num) => {
     return num.toString().padStart(2, '0');
@@ -52,7 +78,7 @@ const EventCountdown = () => {
     window.location.href = '/events';
   };
 
-  if (!t) return null; // Return null if translations are not loaded
+  if (loading || !t || !nextEvent) return null;
 
   const timeUnits = [
     { value: timeLeft.days, label: t.days },
@@ -91,7 +117,7 @@ const EventCountdown = () => {
         margin: '0 0 30px 0',
         color: '#ffffff'
       }}>
-        {t.celebrationTitle}
+        {nextEvent.title}
       </h2>
 
       <div style={{
@@ -99,43 +125,45 @@ const EventCountdown = () => {
         marginBottom: '40px',
         lineHeight: '1.6'
       }}>
-        <p style={{ margin: '0 0 5px 0' }}>
-          <strong>{t.startTime}:</strong> {t.time}
-        </p>
-        <p style={{ margin: '0' }}>
-          <strong>{t.location}:</strong> {t.address}
-        </p>
+        <div style={{ marginBottom: '8px' }}>
+          <span style={{ opacity: '0.8' }}>{t.startTime}: </span>
+          <strong>{nextEvent.time}</strong>
+        </div>
+        <div>
+          <span style={{ opacity: '0.8' }}>{t.location}: </span>
+          <strong>{nextEvent.location}</strong>
+        </div>
       </div>
 
       <div style={{
         display: 'flex',
         justifyContent: 'center',
-        gap: '40px',
+        gap: '20px',
         marginBottom: '40px',
         flexWrap: 'wrap'
       }}>
-        {timeUnits.map((item, index) => (
+        {timeUnits.map((unit, index) => (
           <div key={index} style={{
-            textAlign: 'center',
-            minWidth: '60px',
-            animation: item.label === t.seconds ? 'pulse 1s ease-in-out' : 'none'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            minWidth: '80px'
           }}>
             <div style={{
               fontSize: '48px',
               fontWeight: 'bold',
-              color: '#ffffff',
               lineHeight: '1',
-              marginBottom: '8px',
-              transition: 'all 0.3s ease'
+              marginBottom: '10px'
             }}>
-              {formatNumber(item.value)}
+              {formatNumber(unit.value)}
             </div>
             <div style={{
-              fontSize: '16px',
-              color: '#cccccc',
-              fontWeight: '500'
+              fontSize: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              opacity: '0.7'
             }}>
-              {item.label}
+              {unit.label}
             </div>
           </div>
         ))}
@@ -144,39 +172,29 @@ const EventCountdown = () => {
       <button 
         onClick={handleAllEventsClick}
         style={{
-          backgroundColor: '#d4b896',
-          color: '#2d5a4a',
-          border: 'none',
-          padding: '12px 24px',
-          fontSize: '16px',
-          fontWeight: '600',
-          borderRadius: '6px',
+          backgroundColor: 'transparent',
+          color: 'white',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          padding: '12px 30px',
+          fontSize: '14px',
+          fontWeight: '500',
           cursor: 'pointer',
+          borderRadius: '4px',
           transition: 'all 0.3s ease',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          textTransform: 'uppercase',
+          letterSpacing: '1px'
         }}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = '#c4a886';
-          e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+        onMouseOver={(e) => {
+          e.target.style.backgroundColor = 'white';
+          e.target.style.color = '#2d5a4a';
         }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = '#d4b896';
-          e.target.style.transform = 'translateY(0)';
-          e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        onMouseOut={(e) => {
+          e.target.style.backgroundColor = 'transparent';
+          e.target.style.color = 'white';
         }}
       >
         {t.allEventsButton}
       </button>
-
-      <style>
-        {`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-          }
-        `}
-      </style>
     </div>
   );
 };
