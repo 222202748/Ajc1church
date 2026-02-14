@@ -6,12 +6,48 @@ import axiosInstance from '../utils/axiosConfig';
 
 const AllEvents = () => {
   const navigate = useNavigate();
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&h=450&fit=crop&auto=format";
   const [searchTerm, setSearchTerm] = useState('');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { language } = useLanguage();
   const t = useMemo(() => translations[language] || translations.en || {}, [language]);
+
+  // Normalize various common URL types into a displayable image URL
+  const normalizeImageUrl = useCallback((url) => {
+    if (!url || typeof url !== 'string') return FALLBACK_IMAGE;
+    const trimmed = url.trim();
+    // Data URLs (base64)
+    if (trimmed.startsWith('data:image/')) return trimmed;
+    // YouTube links -> thumbnail
+    const ytMatch =
+      trimmed.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/) ||
+      trimmed.match(/(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/);
+    if (ytMatch && ytMatch[1]) {
+      return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+    }
+    // Google Drive share links -> direct view
+    // Format 1: https://drive.google.com/file/d/<id>/view?usp=sharing
+    const gdFileMatch = trimmed.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (gdFileMatch && gdFileMatch[1]) {
+      return `https://drive.google.com/uc?export=view&id=${gdFileMatch[1]}`;
+    }
+    // Format 2: https://drive.google.com/open?id=<id> or ...?id=<id>
+    const gdIdParam = trimmed.match(/[?&]id=([^&]+)/);
+    if (gdIdParam && gdIdParam[1]) {
+      return `https://drive.google.com/uc?export=view&id=${gdIdParam[1]}`;
+    }
+    // Dropbox -> direct content
+    if (trimmed.includes('dropbox.com')) {
+      return trimmed
+        .replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+        .replace('dl=0', 'dl=1');
+    }
+    // Google Photos and other non-direct links usually won't display due to CORS/mixed content;
+    // we return the URL and rely on onError fallback below.
+    return trimmed;
+  }, []);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -68,7 +104,7 @@ const AllEvents = () => {
         time: event.time,
         location: event.location,
         description: event.description,
-        image: event.image || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop&auto=format"
+        image: event.image || FALLBACK_IMAGE
       };
     });
 
@@ -200,12 +236,18 @@ const AllEvents = () => {
       flexDirection: 'column',
       transition: 'transform 0.3s ease, box-shadow 0.3s ease'
     },
-    eventImage: {
+    eventImageWrapper: {
       width: '100%',
       height: '200px',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden',
+      backgroundColor: '#e5e7eb'
+    },
+    eventImage: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      display: 'block'
     },
     dateTag: {
       position: 'absolute',
@@ -423,10 +465,14 @@ const AllEvents = () => {
             <div style={styles.eventsGrid} className="events-grid">
               {filteredEvents.map((event) => (
                 <div key={event.id} style={styles.eventCard} className="event-card">
-                  <div 
-                    style={{ ...styles.eventImage, backgroundImage: `url(${event.image})` }}
-                    className="event-image"
-                  >
+                  <div style={styles.eventImageWrapper} className="event-image">
+                    <img
+                      src={normalizeImageUrl(event.image)}
+                      alt={event.title}
+                      style={styles.eventImage}
+                      onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
+                      referrerPolicy="no-referrer"
+                    />
                     <div style={styles.dateTag}>
                       <div style={styles.dateNumber}>{event.date}</div>
                       <div style={styles.dateMonth}>{event.month}</div>
