@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { videoUpload, mixedMediaUpload } = require('../middleware/videoUpload');
 const { authenticateAdmin } = require('./admin');
+const Sermon = require('../models/Sermon');
 const router = express.Router();
 
 // Serve uploaded videos
@@ -18,23 +19,36 @@ router.post('/video', authenticateAdmin, videoUpload.single('video'), async (req
       return res.status(400).json({ error: 'No video file uploaded' });
     }
 
+    const { title, pastor, category, date, description } = req.body;
+
     const videoInfo = {
+      title: title || req.file.originalname.split('.')[0].replace(/_/g, ' '),
       filename: req.file.filename,
       originalName: req.file.originalname,
       size: req.file.size,
       mimetype: req.file.mimetype,
       url: `/api/upload/videos/${req.file.filename}`,
+      videoUrl: `/api/upload/videos/${req.file.filename}`,
+      pastor: pastor || "Pastor SILUVAI RAJA",
+      category: category || "Sermon",
+      date: date || new Date(),
+      description: description || "",
       uploadedAt: new Date()
     };
 
+    // Save to database
+    const sermon = new Sermon(videoInfo);
+    await sermon.save();
+
     res.json({
       success: true,
-      message: 'Video uploaded successfully',
-      video: videoInfo
+      message: 'Video uploaded and sermon saved successfully',
+      video: videoInfo,
+      sermon
     });
   } catch (error) {
     console.error('Error uploading video:', error);
-    res.status(500).json({ error: 'Failed to upload video' });
+    res.status(500).json({ error: 'Failed to upload video and save sermon' });
   }
 });
 
@@ -133,15 +147,17 @@ router.delete('/video/:filename', authenticateAdmin, async (req, res) => {
     const { filename } = req.params;
     const videoPath = path.join(__dirname, '../../uploads/videos', filename);
     
-    if (!fs.existsSync(videoPath)) {
-      return res.status(404).json({ error: 'Video not found' });
-    }
+    // Delete from database
+    await Sermon.findOneAndDelete({ filename });
 
-    fs.unlinkSync(videoPath);
+    // Delete from filesystem if exists
+    if (fs.existsSync(videoPath)) {
+      fs.unlinkSync(videoPath);
+    }
 
     res.json({
       success: true,
-      message: 'Video deleted successfully'
+      message: 'Video deleted successfully from database and filesystem'
     });
   } catch (error) {
     console.error('Error deleting video:', error);
@@ -152,6 +168,17 @@ router.delete('/video/:filename', authenticateAdmin, async (req, res) => {
 // List all uploaded videos (public)
 router.get('/videos/list', async (req, res) => {
   try {
+    // First try to get from database
+    const sermons = await Sermon.find().sort({ date: -1 });
+    
+    if (sermons && sermons.length > 0) {
+      return res.json({
+        success: true,
+        videos: sermons
+      });
+    }
+
+    // Fallback to filesystem if database is empty
     const videosDir = path.join(__dirname, '../../uploads/videos');
     
     if (!fs.existsSync(videosDir)) {
@@ -174,8 +201,13 @@ router.get('/videos/list', async (req, res) => {
           filename: file,
           size: stats.size,
           url: `/api/upload/videos/${file}`,
+          videoUrl: `/api/upload/videos/${file}`,
           createdAt: stats.birthtime,
-          modifiedAt: stats.mtime
+          modifiedAt: stats.mtime,
+          title: file.split('.')[0].replace(/_/g, ' '),
+          pastor: "Pastor SILUVAI RAJA",
+          category: "Sermon",
+          date: stats.birthtime
         };
       })
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

@@ -10,11 +10,25 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
   const videoRef = useRef(null);
   
   const getMediaUrl = (url) => {
-    if (!url) return null;
+    if (!url || url === 'null' || url === 'undefined' || url === '') return null;
     if (url.startsWith('http')) return url;
-    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    if (cleanUrl.includes('/uploads/')) return `${BASE_URL}${cleanUrl}`;
-    return cleanUrl;
+    
+    // Ensure URL doesn't have double slashes
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    
+    // If it's an absolute path that already includes /uploads/, prepend BASE_URL
+    if (cleanPath.includes('/uploads/')) {
+      return `${BASE_URL}${cleanPath}`;
+    }
+    
+    // If it's a relative path to public assets (videos, audio, images), 
+    // keep it relative so it's served by the frontend host
+    if (cleanPath.startsWith('/videos/') || cleanPath.startsWith('/audio/') || cleanPath.startsWith('/images/')) {
+      return cleanPath;
+    }
+    
+    // Default fallback for other paths: assume they are relative to BASE_URL
+    return `${BASE_URL}${cleanPath}`;
   };
 
   const finalVideoUrl = getMediaUrl(videoUrl);
@@ -34,26 +48,37 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
         setIsPlaying(false);
       } else {
         // Check if video has sources
-        const sources = video.querySelectorAll('source');
-        if (sources.length === 0) {
+        const sources = Array.from(video.querySelectorAll('source'));
+        if (sources.length === 0 && !video.src) {
           throw new Error('No video sources available');
         }
         
         // Check if at least one source exists on the server
         let sourceExists = false;
+        // For local public assets, we assume they exist or will be handled by the browser
+        const isLocalAsset = (src) => src && (src.startsWith('/videos/') || src.startsWith('/audio/') || src.includes(window.location.host));
+        
         for (const source of sources) {
+          const src = source.src || source.currentSrc;
+          if (isLocalAsset(src)) {
+            sourceExists = true; // Assume local assets are available to avoid CORS issues with fetch
+            break;
+          }
           try {
-            const response = await fetch(source.src, { method: 'HEAD' });
+            const response = await fetch(src, { method: 'HEAD' });
             if (response.ok) {
               sourceExists = true;
               break;
             }
           } catch (e) {
-            console.warn(`Failed to check source: ${source.src}`, e);
+            console.warn(`Failed to check source existence via fetch: ${src}`, e);
+            // If fetch fails (e.g. CORS), we'll let the video element try to load it anyway
+            sourceExists = true; 
+            break;
           }
         }
         
-        if (!sourceExists) {
+        if (!sourceExists && sources.length > 0) {
           throw new Error('Video files not found on server');
         }
         
@@ -165,62 +190,83 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
   };
   
   const handleMediaError = (e) => {
-    console.error('Media error:', e);
+    // The target could be the <source> element or the <video>/<audio> element
+    const target = e.target;
+    const isSourceTag = target && target.tagName === 'SOURCE';
+    const mediaElement = isSourceTag ? target.parentElement : target;
+    
+    console.error('Media error event caught:', {
+      type: e.type,
+      targetTagName: target ? target.tagName : 'unknown',
+      targetSrc: target ? (target.src || target.currentSrc) : 'none',
+      mediaElementTagName: mediaElement ? mediaElement.tagName : 'none'
+    });
     
     let errorMessage = 'Media playback error';
     let detailedMessage = 'The media file could not be loaded';
     
-    // Check if the media element has sources
-    const hasNoSources = e.target && e.target.querySelectorAll('source').length === 0;
-    const sourcesExist = e.target && e.target.querySelectorAll('source').length > 0;
-    const allSourcesFailed = sourcesExist && Array.from(e.target.querySelectorAll('source')).every(source => {
-      try {
-        // Try to fetch the source to check if it exists
-        const testFetch = new XMLHttpRequest();
-        testFetch.open('HEAD', source.src, false);
-        testFetch.send();
-        return testFetch.status >= 400; // Return true if file doesn't exist
-      } catch (err) {
-        return true; // Assume failure if we can't check
-      }
-    });
+    if (!mediaElement) {
+      console.error('Media element not found for error event');
+      return;
+    }
+
+    const sources = Array.from(mediaElement.querySelectorAll('source'));
+    const hasNoSources = sources.length === 0 && !mediaElement.src;
     
     if (hasNoSources) {
       detailedMessage = 'No media sources provided';
-    } else if (allSourcesFailed) {
-      detailedMessage = 'Media file not found on server';
-    } else if (e.target && e.target.error) {
-      const error = e.target.error;
-      
-      switch (error.code) {
-        case error.MEDIA_ERR_ABORTED:
-          detailedMessage = 'Media loading was aborted';
-          break;
-        case error.MEDIA_ERR_NETWORK:
-          detailedMessage = 'Network error while loading media';
-          break;
-        case error.MEDIA_ERR_DECODE:
-          detailedMessage = 'Media decoding error - file may be corrupted';
-          break;
-        case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          detailedMessage = 'Media format not supported or file not found';
-          break;
-        default:
-          detailedMessage = 'Unknown media error occurred';
+      console.error('Error: Media element has no sources and no src attribute', mediaElement);
+    } else {
+      // If the error came from a specific source tag, it might just be one format failing
+      if (isSourceTag) {
+        const sourceSrc = target.src || target.currentSrc || 'unknown source';
+        console.warn(`Failed to load specific media source: ${sourceSrc}`);
+        
+        // If this is not the last source, the browser will try the next one automatically
+        const sourceIndex = sources.indexOf(target);
+        if (sourceIndex !== -1 && sourceIndex < sources.length - 1) {
+          console.log(`Browser will attempt next source (index ${sourceIndex + 1} of ${sources.length})...`);
+          return; // Don't show error UI yet
+        }
+        
+        detailedMessage = 'All provided media sources failed to load';
       }
-      
-      errorMessage = error.message || `Error code: ${error.code}`;
+
+      const error = mediaElement.error;
+      if (error) {
+        switch (error.code) {
+          case error.MEDIA_ERR_ABORTED:
+            detailedMessage = 'Media loading was aborted';
+            break;
+          case error.MEDIA_ERR_NETWORK:
+            detailedMessage = 'Network error while loading media';
+            break;
+          case error.MEDIA_ERR_DECODE:
+            detailedMessage = 'Media decoding error - file may be corrupted';
+            break;
+          case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            detailedMessage = 'Media format not supported or file not found';
+            break;
+          default:
+            detailedMessage = 'Unknown media error occurred';
+        }
+        errorMessage = error.message || `Error code: ${error.code}`;
+      } else if (isSourceTag) {
+        // We already set a detailed message for source failure
+      } else {
+        detailedMessage = 'The media file could not be reached or is not a valid format';
+      }
     }
     
-    console.error('Media error details:', errorMessage, detailedMessage);
+    console.error('Final media error summary:', { errorMessage, detailedMessage });
     setMediaError(`${detailedMessage}. Please try again or contact support.`);
     setIsPlaying(false);
   };
   
   const handleImageError = (e) => {
     console.log('Failed to load image:', e.target.src);
-    // Set a fallback image
-    e.target.src = 'https://via.placeholder.com/600x400/8B4513/ffffff?text=No+Preview+Available';
+    // Set a more reliable fallback image from Unsplash
+    e.target.src = 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=60';
   };
 
   const getShareUrl = () => {
@@ -342,7 +388,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
           ) : (
             <>
               <img 
-                src={thumbnail || 'https://via.placeholder.com/600x400/8B4513/ffffff?text=No+Preview+Available'} 
+                src={thumbnail || 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=60'} 
                 className="card-img img-fluid w-100 h-100" 
                 alt={title} 
                 style={{ objectFit: 'cover' }}

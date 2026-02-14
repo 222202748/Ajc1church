@@ -96,6 +96,9 @@ donationSchema.pre('save', async function(next) {
 
 const Donation = mongoose.model('Donation', donationSchema);
 
+// Sermon model is already exported from its file
+const Sermon = require('./models/Sermon');
+
 // Email Configuration
 const transporter = nodemailer.createTransport({
   service: 'gmail',
