@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, Mail, Phone, MapPin, Download, Search, Filter, Eye, Trash2, RefreshCw, UserPlus, DollarSign, BarChart3, FileText, Video } from 'lucide-react';
+import { Users, Calendar, Mail, Phone, MapPin, Download, Search, Filter, Eye, Trash2, RefreshCw, UserPlus, DollarSign, BarChart3, FileText, Video, PlusCircle } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 import DonationDashboard from './DonationDashboard';
 import { useNavigate } from 'react-router-dom';
 import SermonVideoUpload from './SermonVideoUpload';
+import EventAdmin from './EventAdmin';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -533,6 +534,19 @@ const AdminDashboard = () => {
                 </div>
               </button>
               <button
+                onClick={() => setActiveTab('manage-events')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'manage-events'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Manage Events</span>
+                </div>
+              </button>
+              <button
                 onClick={() => setActiveTab('donations')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'donations'
@@ -582,6 +596,7 @@ const AdminDashboard = () => {
 
         {/* Tab Content */}
         {activeTab === 'events' && <EventRegistrationDashboard />}
+        {activeTab === 'manage-events' && <EventAdmin />}
         {activeTab === 'donations' && <DonationDashboard />}
         {activeTab === 'sermons' && <SermonVideoUpload />}
       </div>

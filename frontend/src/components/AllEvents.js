@@ -1,13 +1,34 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
+import axiosInstance from '../utils/axiosConfig';
 
 const AllEvents = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { language } = useLanguage();
   const t = useMemo(() => translations[language] || translations.en || {}, [language]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get('/api/events');
+        setEvents(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        setError('Failed to load events. Please try again later.');
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const getCurrentDate = useCallback(() => {
     const today = new Date();
@@ -26,82 +47,38 @@ const AllEvents = () => {
   }, [t]);
 
   const filteredEvents = useMemo(() => {
-    const events = [
-      {
-        id: 1,
-        title: getTranslation('wonderfulGathering', 'Wonderful Gathering'),
-        date: "29",
-        month: "JUN",
-        year: "2025",
-        time: getTranslation('eventTime', 'Time') + " 06:00 pm",
-        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-        description: getTranslation('events', 'Event Description'),
-        image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop&auto=format"
-      },
-      {
-        id: 2,
-        title: getTranslation('buildingBonds', 'Building Bonds'),
-        date: "29",
-        month: "JUN",
-        year: "2025",
-        time: getTranslation('eventTime', 'Time') + " 06:00 pm",
-        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-        description: getTranslation('events', 'Event Description'),
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop&auto=format"
-      },
-      {
-        id: 3,
-        title: getTranslation('thankfulness', 'Thankfulness'),
-        date: "12",
-        month: "JUL",
-        year: "2025",
-        time: getTranslation('eventTime', 'Time') + " 12:00 pm",
-        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-        description: getTranslation('events', 'Event Description'),
-        image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=250&fit=crop&auto=format"
-      },
-      {
-        id: 4,
-        title: getTranslation('faithFellowship', 'Faith Fellowship'),
-        date: "27",
-        month: "JUL",
-        year: "2025",
-        time: getTranslation('eventTime', 'Time') + " 08:00 pm",
-        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-        description: getTranslation('events', 'Event Description'),
-        image: "https://images.unsplash.com/photo-1438032005730-c779502df39b?w=400&h=250&fit=crop&auto=format"
-      },
-      {
-        id: 5,
-        title: getTranslation('youthGathering', 'Youth Gathering'),
-        date: "15",
-        month: "AUG",
-        year: "2025",
-        time: getTranslation('eventTime', 'Time') + " 07:00 pm",
-        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-        description: getTranslation('events', 'Event Description'),
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=250&fit=crop&auto=format"
-      },
-      {
-        id: 6,
-        title: getTranslation('prayerService', 'Prayer Service'),
-        date: "28",
-        month: "AUG",
-        year: "2025",
-        time: getTranslation('eventTime', 'Time') + " 05:30 am",
-        location: getTranslation('eventLocation', 'Location') + ": 7th main road,12th cross street,pudhu nallur,Kundrathur,ch-600069.",
-        description: getTranslation('events', 'Event Description'),
-        image: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&h=250&fit=crop&auto=format"
-      }
-    ];
+    // If no events from backend, return empty array or handle accordingly
+    if (!events || events.length === 0) {
+      return [];
+    }
+
+    const formattedEvents = events.map(event => {
+      const eventDate = new Date(event.date);
+      const day = eventDate.getDate().toString().padStart(2, '0');
+      const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const month = monthNames[eventDate.getMonth()];
+      const year = eventDate.getFullYear().toString();
+
+      return {
+        id: event._id,
+        title: event.title,
+        date: day,
+        month: month,
+        year: year,
+        time: event.time,
+        location: event.location,
+        description: event.description,
+        image: event.image || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop&auto=format"
+      };
+    });
 
     if (!searchTerm.trim()) {
-      return events;
+      return formattedEvents;
     }
 
     const searchLower = searchTerm.toLowerCase().trim();
     
-    return events.filter(event => {
+    return formattedEvents.filter(event => {
       return (
         event.title.toLowerCase().includes(searchLower) ||
         event.location.toLowerCase().includes(searchLower) ||
@@ -111,7 +88,7 @@ const AllEvents = () => {
         event.time.toLowerCase().includes(searchLower)
       );
     });
-  }, [searchTerm, getTranslation]);
+  }, [searchTerm, events]);
 
   const clearSearch = () => {
     setSearchTerm('');
@@ -412,7 +389,25 @@ const AllEvents = () => {
             </div>
           )}
 
-          {filteredEvents.length === 0 ? (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p style={{ marginTop: '20px', color: '#666' }}>Loading upcoming events...</p>
+            </div>
+          ) : error ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#d9534f' }}>
+              <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
+              <div>{error}</div>
+              <button 
+                onClick={() => window.location.reload()} 
+                style={{ ...styles.registerButton, marginTop: '20px', backgroundColor: '#d9534f', color: 'white' }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredEvents.length === 0 ? (
             <div style={styles.noResults}>
               <div style={styles.noResultsIcon}>🔍</div>
               <div style={styles.noResultsText}>{getTranslation('noResults', 'No results found')}</div>
