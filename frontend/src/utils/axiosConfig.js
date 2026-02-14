@@ -227,6 +227,53 @@ const fetchWrapper = {
       console.error('Fetch error:', error);
       throw error;
     }
+  },
+
+  // PUT request
+  put: async (url, body, options = {}) => {
+    const fullUrl = getFullUrl(url);
+    const requiresAuth = options.requiresAuth !== false;
+    try {
+      if (requiresAuth && !isTokenValid()) {
+        const refreshed = await refreshToken();
+        if (!refreshed) {
+          logout();
+          throw new Error('Authentication failed');
+        }
+      }
+      const isFormData = body instanceof FormData;
+      const response = await fetch(fullUrl, {
+        method: 'PUT',
+        headers: {
+          ...(!isFormData && { 'Content-Type': 'application/json' }),
+          ...getAuthHeader()
+        },
+        body: isFormData ? body : JSON.stringify(body)
+      });
+      if (!response.ok) {
+        if (requiresAuth && response.status === 401) {
+          const refreshed = await refreshToken();
+          if (refreshed) {
+            return fetchWrapper.put(url, body, options);
+          } else {
+            logout();
+            throw new Error('Authentication failed');
+          }
+        }
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP error! status: ${response.status}` };
+        }
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return { data, status: response.status };
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
+    }
   }
 };
 

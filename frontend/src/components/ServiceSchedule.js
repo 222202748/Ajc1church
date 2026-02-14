@@ -110,7 +110,6 @@ const ServiceSchedule = () => {
     backgroundColor: '#fff',
     borderRadius: '10px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-    fontFamily: 'Arial, sans-serif',
   };
 
   const headerStyle = {

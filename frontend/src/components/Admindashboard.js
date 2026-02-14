@@ -1,14 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, Mail, Phone, MapPin, Download, Search, Filter, Eye, Trash2, RefreshCw, UserPlus, DollarSign, BarChart3, FileText, Video, PlusCircle } from 'lucide-react';
+import { Users, Calendar, Mail, Phone, MapPin, Download, Search, Filter, Eye, Trash2, RefreshCw, UserPlus, DollarSign, BarChart3, FileText, Video, PlusCircle, Heart } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 import DonationDashboard from './DonationDashboard';
 import { useNavigate } from 'react-router-dom';
 import SermonVideoUpload from './SermonVideoUpload';
 import EventAdmin from './EventAdmin';
+import PrayerRequestAdmin from './PrayerRequestAdmin';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const isTamil = language === 'tamil';
+
+  const t = {
+    dashboard: isTamil ? 'நிர்வாக அறை' : 'Admin Dashboard',
+    manage: isTamil ? 'தேவாலய நிகழ்வுகள் மற்றும் நன்கொடைகளை நிர்வகிக்கவும்' : 'Manage church events and donations',
+    eventReg: isTamil ? 'நிகழ்வு பதிவுகள்' : 'Event Registrations',
+    manageEvents: isTamil ? 'நிகழ்வுகளை நிர்வகிக்கவும்' : 'Manage Events',
+    donations: isTamil ? 'நன்கொடை மேலாண்மை' : 'Donation Management',
+    sermons: isTamil ? 'பிரசங்க வீடியோக்கள்' : 'Sermon Videos',
+    prayer: isTamil ? 'பிரார்த்தனை கோரிக்கைகள்' : 'Prayer Requests',
+    blog: isTamil ? 'வலைப்பதிவு மேலாண்மை' : 'Blog Management',
+    profile: isTamil ? 'சுயவிவர அமைப்புகள்' : 'Profile Settings',
+    refresh: isTamil ? 'புதுப்பிக்கவும்' : 'Refresh',
+    export: isTamil ? 'பதிவிறக்கம்' : 'Export CSV',
+    totalReg: isTamil ? 'மொத்த பதிவுகள்' : 'Total Registrations',
+    totalAtt: isTamil ? 'மொத்த பங்கேற்பாளர்கள்' : 'Total Attendees',
+    confirmed: isTamil ? 'உறுதிப்படுத்தப்பட்டது' : 'Confirmed',
+    activeEvents: isTamil ? 'செயலில் உள்ள நிகழ்வுகள்' : 'Active Events',
+    cancelled: isTamil ? 'ரத்து செய்யப்பட்டது' : 'Cancelled',
+    attended: isTamil ? 'பங்கேற்றவர்கள்' : 'Attended',
+    search: isTamil ? 'பெயர், மின்னஞ்சல் அல்லது தொலைபேசி மூலம் தேடவும்...' : 'Search by name, email, or phone...',
+    confirmedOnly: isTamil ? 'உறுதிப்படுத்தப்பட்டவை மட்டும்' : 'Confirmed Only',
+    allStatus: isTamil ? 'அனைத்து நிலை' : 'All Status',
+    participant: isTamil ? 'பங்கேற்பாளர்' : 'Participant',
+    contact: isTamil ? 'தொடர்பு' : 'Contact',
+    regDate: isTamil ? 'பதிவு தேதி' : 'Registration Date',
+    attendees: isTamil ? 'பங்கேற்பாளர்கள்' : 'Attendees',
+    status: isTamil ? 'நிலை' : 'Status',
+    actions: isTamil ? 'செயல்கள்' : 'Actions',
+    loading: isTamil ? 'ஏற்றப்படுகிறது...' : 'Loading registrations...',
+    noFound: isTamil ? 'பதிவுகள் எதுவும் இல்லை' : 'No registrations found',
+    details: isTamil ? 'விவரங்கள்' : 'Registration Details',
+    name: isTamil ? 'பெயர்' : 'Name',
+    email: isTamil ? 'மின்னஞ்சல்' : 'Email',
+    phone: isTamil ? 'தொலைபேசி' : 'Phone',
+    address: isTamil ? 'முகவரி' : 'Address',
+    notes: isTamil ? 'குறிப்புகள்' : 'Notes',
+    close: isTamil ? 'மூடு' : 'Close',
+    person: isTamil ? 'நபர்' : 'person',
+    people: isTamil ? 'நபர்கள்' : 'people',
+    dashboardTitle: isTamil ? 'நிகழ்வு பதிவு நிர்வாகம்' : 'Event Registration Dashboard',
+    monthlyEvent: isTamil ? 'மாதாந்திர நிகழ்வு - ஜூன் 2025' : 'Monthly Event - June 2025',
+    viewDetails: isTamil ? 'விவரங்களைக் காண்க' : 'View Details',
+    confirm: isTamil ? 'உறுதிப்படுத்து' : 'Confirm',
+    markAttended: isTamil ? 'வருகையை பதிவு செய்' : 'Mark Attended',
+    deleteReg: isTamil ? 'பதிவை நீக்கு' : 'Delete Registration',
+    numAttendees: isTamil ? 'பங்கேற்பாளர்களின் எண்ணிக்கை' : 'Number of Attendees',
+    retry: isTamil ? 'மீண்டும் முயற்சிக்கவும்' : 'Retry',
+    pending: isTamil ? 'நிலுவையில் உள்ளது' : 'Pending'
+  };
+
   const [activeTab, setActiveTab] = useState('events');
   const [registrations, setRegistrations] = useState([]);
   const [filteredRegistrations, setFilteredRegistrations] = useState([]);
@@ -168,8 +222,8 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Event Registration Dashboard</h1>
-            <p className="text-gray-600">Monthly Event - June 2025</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.dashboardTitle}</h1>
+            <p className="text-gray-600">{t.monthlyEvent}</p>
           </div>
           <div className="flex items-center space-x-3 mt-4 md:mt-0">
             <button
@@ -178,14 +232,14 @@ const AdminDashboard = () => {
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
+              <span>{t.refresh}</span>
             </button>
             <button
               onClick={exportToCSV}
               className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4" />
-              <span>Export CSV</span>
+              <span>{t.export}</span>
             </button>
           </div>
         </div>
@@ -199,7 +253,7 @@ const AdminDashboard = () => {
               <Users className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Registrations</p>
+              <p className="text-sm font-medium text-gray-600">{t.totalReg}</p>
               <p className="text-2xl font-bold text-gray-900">{totalRegistrations}</p>
             </div>
           </div>
@@ -211,7 +265,7 @@ const AdminDashboard = () => {
               <UserPlus className="w-8 h-8 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Attendees</p>
+              <p className="text-sm font-medium text-gray-600">{t.totalAtt}</p>
               <p className="text-2xl font-bold text-purple-600">{totalAttendees}</p>
             </div>
           </div>
@@ -225,7 +279,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Confirmed</p>
+              <p className="text-sm font-medium text-gray-600">{t.confirmed}</p>
               <p className="text-2xl font-bold text-green-600">{confirmedCount}</p>
             </div>
           </div>
@@ -237,7 +291,7 @@ const AdminDashboard = () => {
               <BarChart3 className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Events</p>
+              <p className="text-sm font-medium text-gray-600">{t.activeEvents}</p>
               <p className="text-2xl font-bold text-blue-600">1</p>
             </div>
           </div>
@@ -251,7 +305,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Cancelled</p>
+              <p className="text-sm font-medium text-gray-600">{t.cancelled}</p>
               <p className="text-2xl font-bold text-red-600">{cancelledCount}</p>
             </div>
           </div>
@@ -263,8 +317,8 @@ const AdminDashboard = () => {
               <Users className="w-8 h-8 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Attended</p>
-              <p className="text-xs text-gray-500">People</p>
+              <p className="text-sm font-medium text-gray-600">{t.attended}</p>
+              <p className="text-xs text-gray-500">{t.people}</p>
               <p className="text-xl font-bold text-indigo-600">{attendedAttendees}</p>
             </div>
           </div>
@@ -278,7 +332,7 @@ const AdminDashboard = () => {
             <Search className="w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by name, email, or phone..."
+              placeholder={t.search}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -291,9 +345,9 @@ const AdminDashboard = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="confirmed">Confirmed Only</option>
-              <option value="all">All Status</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="confirmed">{t.confirmedOnly}</option>
+              <option value="all">{t.allStatus}</option>
+              <option value="cancelled">{t.cancelled}</option>
             </select>
           </div>
         </div>
@@ -303,14 +357,14 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Registrations ({filteredRegistrations.length})
+            {t.eventReg} ({filteredRegistrations.length})
           </h2>
         </div>
 
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading registrations...</p>
+            <p className="text-gray-600">{t.loading}</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-500">
@@ -320,13 +374,13 @@ const AdminDashboard = () => {
               onClick={fetchRegistrations}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Retry
+              {t.retry}
             </button>
           </div>
         ) : filteredRegistrations.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No registrations found</p>
+            <p>{t.noFound}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -334,22 +388,22 @@ const AdminDashboard = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Participant
+                    {t.participant}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
+                    {t.contact}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Registration Date
+                    {t.regDate}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Attendees
+                    {t.attendees}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t.status}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t.actions}
                   </th>
                 </tr>
               </thead>
@@ -386,12 +440,15 @@ const AdminDashboard = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 flex items-center">
                         <UserPlus className="w-4 h-4 mr-2 text-gray-400" />
-                        {registration.attendeeCount || 1} {(registration.attendeeCount || 1) === 1 ? 'person' : 'people'}
+                        {registration.attendeeCount || 1} {(registration.attendeeCount || 1) === 1 ? t.person : t.people}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(registration.status || 'pending')}`}>
-                        {(registration.status || 'pending').charAt(0).toUpperCase() + (registration.status || 'pending').slice(1)}
+                        {registration.status === 'confirmed' ? t.confirmed : 
+                         registration.status === 'cancelled' ? t.cancelled : 
+                         registration.status === 'pending' ? t.pending : 
+                         t.pending}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -399,28 +456,28 @@ const AdminDashboard = () => {
                         <button
                           onClick={() => setSelectedRegistration(registration)}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100"
-                          title="View Details"
+                          title={t.viewDetails}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleConfirm(registration._id || registration.id)}
                           className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-100"
-                          title="Confirm"
+                          title={t.confirm}
                         >
                           ✓
                         </button>
                         <button
                           onClick={() => handleMarkAttended(registration._id || registration.id)}
                           className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-100"
-                          title="Mark Attended"
+                          title={t.markAttended}
                         >
                           ✔
                         </button>
                         <button
                           onClick={() => handleDeleteRegistration(registration._id || registration.id)}
                           className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100"
-                          title="Delete Registration"
+                          title={t.deleteReg}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -440,7 +497,7 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Registration Details</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t.details}</h3>
                 <button
                   onClick={() => setSelectedRegistration(null)}
                   className="text-gray-400 hover:text-gray-600"
@@ -452,38 +509,41 @@ const AdminDashboard = () => {
             <div className="px-6 py-4">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <label className="block text-sm font-medium text-gray-700">{t.name}</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedRegistration.name}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700">{t.email}</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedRegistration.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700">{t.phone}</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedRegistration.phone}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
+                  <label className="block text-sm font-medium text-gray-700">{t.address}</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedRegistration.address || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Registration Date</label>
+                  <label className="block text-sm font-medium text-gray-700">{t.regDate}</label>
                   <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRegistration.createdAt || selectedRegistration.registrationDate)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Number of Attendees</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRegistration.attendeeCount || 1} {(selectedRegistration.attendeeCount || 1) === 1 ? 'person' : 'people'}</p>
+                  <label className="block text-sm font-medium text-gray-700">{t.numAttendees}</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedRegistration.attendeeCount || 1} {(selectedRegistration.attendeeCount || 1) === 1 ? t.person : t.people}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-gray-700">{t.status}</label>
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border mt-1 ${getStatusColor(selectedRegistration.status || 'pending')}`}>
-                    {(selectedRegistration.status || 'pending').charAt(0).toUpperCase() + (selectedRegistration.status || 'pending').slice(1)}
+                    {selectedRegistration.status === 'confirmed' ? t.confirmed : 
+                     selectedRegistration.status === 'cancelled' ? t.cancelled : 
+                     selectedRegistration.status === 'pending' ? t.pending : 
+                     t.pending}
                   </span>
                 </div>
                 {selectedRegistration.notes && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Notes</label>
+                    <label className="block text-sm font-medium text-gray-700">{t.notes}</label>
                     <p className="mt-1 text-sm text-gray-900">{selectedRegistration.notes}</p>
                   </div>
                 )}
@@ -494,7 +554,7 @@ const AdminDashboard = () => {
                 onClick={() => setSelectedRegistration(null)}
                 className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Close
+                {t.close}
               </button>
             </div>
           </div>
@@ -510,8 +570,8 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage church events and donations</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.dashboard}</h1>
+              <p className="text-gray-600">{t.manage}</p>
             </div>
           </div>
         </div>
@@ -530,7 +590,7 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4" />
-                  <span>Event Registrations</span>
+                  <span>{t.eventReg}</span>
                 </div>
               </button>
               <button
@@ -543,7 +603,7 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center space-x-2">
                   <PlusCircle className="w-4 h-4" />
-                  <span>Manage Events</span>
+                  <span>{t.manageEvents}</span>
                 </div>
               </button>
               <button
@@ -556,7 +616,7 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center space-x-2">
                   <DollarSign className="w-4 h-4" />
-                  <span>Donation Management</span>
+                  <span>{t.donations}</span>
                 </div>
               </button>
               <button
@@ -569,7 +629,20 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center space-x-2">
                   <Video className="w-4 h-4" />
-                  <span>Sermon Videos</span>
+                  <span>{t.sermons}</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('prayer-requests')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'prayer-requests'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Heart className="w-4 h-4" />
+                  <span>{t.prayer}</span>
                 </div>
               </button>
               <button
@@ -578,7 +651,7 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center space-x-2">
                   <FileText className="w-4 h-4" />
-                  <span>Blog Management</span>
+                  <span>{t.blog}</span>
                 </div>
               </button>
               <button
@@ -587,7 +660,7 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center space-x-2">
                   <Users className="w-4 h-4" />
-                  <span>Profile Settings</span>
+                  <span>{t.profile}</span>
                 </div>
               </button>
             </nav>
@@ -599,6 +672,7 @@ const AdminDashboard = () => {
         {activeTab === 'manage-events' && <EventAdmin />}
         {activeTab === 'donations' && <DonationDashboard />}
         {activeTab === 'sermons' && <SermonVideoUpload />}
+        {activeTab === 'prayer-requests' && <PrayerRequestAdmin />}
       </div>
     </div>
   );

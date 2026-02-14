@@ -1,4 +1,7 @@
-export const BASE_URL = process.env.REACT_APP_API_URL || 'https://ajc1church-2.onrender.com';
+export const BASE_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5001' 
+    : 'https://ajc1church-2.onrender.com');
 const API_BASE_URL = `${BASE_URL}/api`;
 
 export const API_ENDPOINTS = {
@@ -12,7 +15,8 @@ export const API_ENDPOINTS = {
   EVENT_REGISTRATIONS: `${API_BASE_URL}/eventregistration`,
   donations: `${API_BASE_URL}/donations`,
   adminDonations: `${API_BASE_URL}/admin/donations`,
-  donationStats: `${API_BASE_URL}/admin/donations/stats`
+  donationStats: `${API_BASE_URL}/admin/donations/stats`,
+  prayerRequests: `${API_BASE_URL}/prayer-requests`
 };
 
 export const getAuthHeader = () => {

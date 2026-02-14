@@ -17,7 +17,7 @@ const AllEvents = () => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get('/api/events');
+        const response = await axiosInstance.get('/api/events', { requiresAuth: false });
         setEvents(response.data);
         setLoading(false);
       } catch (err) {
@@ -96,9 +96,8 @@ const AllEvents = () => {
 
   const styles = {
     container: {
-      fontFamily: 'Arial, sans-serif',
       backgroundColor: '#f8f8f8',
-      minHeight: '100vh'
+      minHeight: '80vh'
     },
     topBar: {
       backgroundColor: '#8B4513',

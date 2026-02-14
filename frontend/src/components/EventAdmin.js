@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Search, RefreshCw, Eye, FileText, X, Check } from 'lucide-react';
+import { Calendar, Check, Clock, Edit, MapPin, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
 import axiosInstance from '../utils/axiosConfig';
 
 const EventAdmin = () => {

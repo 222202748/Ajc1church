@@ -1,9 +1,98 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, User, Share2, Heart, MessageCircle, Edit, Trash2, Plus, Download, Search, Filter, RefreshCw, Eye, FileText, Video, Tag } from 'lucide-react';
 import { API_ENDPOINTS, BASE_URL } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BlogAdmin = () => {
+  const { language } = useLanguage();
+  const isTamil = language === 'tamil';
+
+  const t = {
+    blogArticles: isTamil ? 'வலைப்பதிவு கட்டுரைகள்' : 'Blog Articles',
+    manageBlog: isTamil ? 'உங்கள் தேவாலய வலைப்பதிவு கட்டுரைகளை நிர்வகிக்கவும்' : 'Manage your church blog articles',
+    newArticle: isTamil ? 'புதிய கட்டுரை' : 'New Article',
+    refresh: isTamil ? 'புதுப்பிக்கவும்' : 'Refresh',
+    searchPlaceholder: isTamil ? 'தலைப்பு அல்லது சுருக்கம் மூலம் தேடவும்...' : 'Search by title or excerpt...',
+    allStatus: isTamil ? 'அனைத்து நிலை' : 'All Status',
+    published: isTamil ? 'வெளியிடப்பட்டது' : 'Published',
+    draft: isTamil ? 'வரைவு' : 'Draft',
+    archived: isTamil ? 'காப்பகப்படுத்தப்பட்டது' : 'Archived',
+    allCategories: isTamil ? 'அனைத்து பிரிவுகள்' : 'All Categories',
+    articlesCount: (count) => isTamil ? `கட்டுரைகள் (${count})` : `Articles (${count})`,
+    loading: isTamil ? 'கட்டுரைகள் ஏற்றப்படுகின்றன...' : 'Loading articles...',
+    retry: isTamil ? 'மீண்டும் முயற்சிக்கவும்' : 'Retry',
+    noArticles: isTamil ? 'கட்டுரைகள் எதுவும் இல்லை' : 'No articles found',
+    articleHeader: isTamil ? 'கட்டுரை' : 'Article',
+    categoryHeader: isTamil ? 'பிரிவு' : 'Category',
+    dateHeader: isTamil ? 'தேதி' : 'Date',
+    statusHeader: isTamil ? 'நிலை' : 'Status',
+    actionsHeader: isTamil ? 'செயல்கள்' : 'Actions',
+    editArticle: isTamil ? 'கட்டுரையைத் திருத்து' : 'Edit Article',
+    viewArticle: isTamil ? 'கட்டுரையைப் பார்' : 'View Article',
+    deleteArticle: isTamil ? 'கட்டுரையை நீக்கு' : 'Delete Article',
+    createArticle: isTamil ? 'புதிய கட்டுரையை உருவாக்கு' : 'Create New Article',
+    updateExisting: isTamil ? 'உங்கள் கட்டுரையைப் புதுப்பிக்கவும்' : 'Update your existing article',
+    addNew: isTamil ? 'உங்கள் வலைப்பதிவில் புதிய கட்டுரையைச் சேர்க்கவும்' : 'Add a new article to your blog',
+    backToList: isTamil ? 'பட்டியலுக்குத் திரும்பு' : 'Back to List',
+    articleDetails: isTamil ? 'கட்டுரை விவரங்கள்' : 'Article Details',
+    title: isTamil ? 'தலைப்பு *' : 'Title *',
+    titlePlaceholder: isTamil ? 'கட்டுரைத் தலைப்பை உள்ளிடவும்' : 'Enter article title',
+    category: isTamil ? 'பிரிவு *' : 'Category *',
+    excerpt: isTamil ? 'சுருக்கம் * (அதிகபட்சம் 200 எழுத்துக்கள்)' : 'Excerpt * (max 200 characters)',
+    excerptPlaceholder: isTamil ? 'கட்டுரையின் சுருக்கமான விவரம்' : 'Brief summary of the article',
+    content: isTamil ? 'உள்ளடக்கம் *' : 'Content *',
+    contentPlaceholder: isTamil ? 'முழு கட்டுரை உள்ளடக்கம்' : 'Full article content',
+    tags: isTamil ? 'குறிச்சொற்கள் (காற்புள்ளியால் பிரிக்கவும்)' : 'Tags (comma separated)',
+    tagsPlaceholder: isTamil ? 'நம்பிக்கை, பிரார்த்தனை, சமூகம்' : 'faith, prayer, community',
+    tagsHint: isTamil ? 'குறிச்சொற்களை காற்புள்ளிகளால் பிரிக்கவும்' : 'Separate tags with commas',
+    mediaType: isTamil ? 'ஊடக வகை' : 'Media Type',
+    image: isTamil ? 'படம்' : 'Image',
+    video: isTamil ? 'வீடியோ' : 'Video',
+    both: isTamil ? 'இரண்டும்' : 'Both',
+    featuredImage: isTamil ? 'சிறப்புப் படம்' : 'Featured Image',
+    featuredVideo: isTamil ? 'சிறப்பு வீடியோ' : 'Featured Video',
+    imageHint: isTamil ? 'பரிந்துரைக்கப்பட்ட அளவு: 1200x630 பிக்சல்கள், அதிகபட்சம் 5MB' : 'Recommended size: 1200x630 pixels, max 5MB',
+    videoHint: isTamil ? 'அதிகபட்ச கோப்பு அளவு: 50MB' : 'Max file size: 50MB',
+    status: isTamil ? 'நிலை' : 'Status',
+    statusPublishedHint: isTamil ? 'கட்டுரை பொதுமக்களுக்குத் தெரியும்' : 'Article will be visible to the public',
+    statusDraftHint: isTamil ? 'பின்னர் வெளியிட வரைவாகச் சேமிக்கவும்' : 'Save as draft to publish later',
+    statusArchivedHint: isTamil ? 'காப்பகப்படுத்தப்பட்ட கட்டுரைகள் பொதுமக்களுக்குத் தெரியாது' : 'Archived articles are not visible to the public',
+    cancel: isTamil ? 'ரத்துசெய்' : 'Cancel',
+    saveArticle: isTamil ? 'கட்டுரையைச் சேமி' : 'Save Article',
+    saving: isTamil ? 'சேமிக்கப்படுகிறது...' : 'Saving...',
+    previewTitle: isTamil ? 'கட்டுரை முன்னோட்டம்' : 'Article Preview',
+    previewHint: isTamil ? 'வாசகர்களுக்கு உங்கள் கட்டுரை எப்படித் தோன்றும் என்பதைப் பாருங்கள்' : 'Preview how your article will appear to readers',
+    edit: isTamil ? 'திருத்து' : 'Edit',
+    share: isTamil ? 'பகிர்' : 'Share',
+    download: isTamil ? 'பதிவிறக்கு' : 'Download',
+    comment: isTamil ? 'கருத்து' : 'Comment',
+    views: isTamil ? 'பார்வைகள்' : 'views',
+    deleteConfirm: isTamil ? 'இந்தக் கட்டுரையை நீக்க விரும்புகிறீர்களா?' : 'Are you sure you want to delete this article?',
+    deleteSuccess: isTamil ? 'கட்டுரை வெற்றிகரமாக நீக்கப்பட்டது!' : 'Article deleted successfully!',
+    deleteFail: isTamil ? 'கட்டுரையை நீக்க முடியவில்லை:' : 'Failed to delete article:',
+    saveSuccessUpdate: isTamil ? 'கட்டுரை வெற்றிகரமாகப் புதுப்பிக்கப்பட்டது!' : 'Article updated successfully!',
+    saveSuccessCreate: isTamil ? 'கட்டுரை வெற்றிகரமாக உருவாக்கப்பட்டது!' : 'Article created successfully!',
+    saveFail: isTamil ? 'கட்டுரையைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Failed to save article. Please try again.',
+    fetchFail: isTamil ? 'கட்டுரைகளை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Failed to load articles. Please try again.',
+    validationTitle: isTamil ? 'தலைப்பு தேவை' : 'Title is required',
+    validationContent: isTamil ? 'உள்ளடக்கம் தேவை' : 'Content is required',
+    validationExcerpt: isTamil ? 'சுருக்கம் தேவை' : 'Excerpt is required',
+    validationExcerptLength: isTamil ? 'சுருக்கம் 200 எழுத்துக்களுக்கு குறைவாக இருக்க வேண்டும்' : 'Excerpt must be less than 200 characters',
+    validationCategory: isTamil ? 'பிரிவு தேவை' : 'Category is required',
+    validationImage: isTamil ? 'சிறப்புப் படம் தேவை' : 'Featured image is required',
+    validationVideo: isTamil ? 'சிறப்பு வீடியோ தேவை' : 'Featured video is required',
+    categories: {
+      sermon: isTamil ? 'பிரசங்கம்' : 'Sermon',
+      event: isTamil ? 'நிகழ்வு' : 'Event',
+      announcement: isTamil ? 'அறிவிப்பு' : 'Announcement',
+      testimony: isTamil ? 'சாட்சியம்' : 'Testimony',
+      prayer: isTamil ? 'பிரார்த்தனை' : 'Prayer',
+      community: isTamil ? 'சமூகம்' : 'Community',
+      other: isTamil ? 'மற்றவை' : 'Other'
+    }
+  };
+
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,11 +120,7 @@ const BlogAdmin = () => {
   const [imagePreview, setImagePreview] = useState(null);
   
   // Fetch articles from backend
-  useEffect(() => {
-    fetchArticles();
-  }, []);
-  
-  const fetchArticles = async () => {
+  const fetchArticles = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,11 +128,15 @@ const BlogAdmin = () => {
       setArticles(response.data.blogs || []);
     } catch (error) {
       console.error('Error fetching articles:', error);
-      setError('Failed to load articles. Please try again.');
+      setError(t.fetchFail);
     } finally {
       setLoading(false);
     }
-  };
+  }, [t.fetchFail]);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
 
   // Filter articles based on search and filters
   const filteredArticles = articles.filter(article => {
@@ -97,18 +186,18 @@ const BlogAdmin = () => {
   // Form validation
   const validateForm = () => {
     const errors = {};
-    if (!formData.title.trim()) errors.title = 'Title is required';
-    if (!formData.content.trim()) errors.content = 'Content is required';
-    if (!formData.excerpt.trim()) errors.excerpt = 'Excerpt is required';
-    if (formData.excerpt.length > 200) errors.excerpt = 'Excerpt must be less than 200 characters';
-    if (!formData.category) errors.category = 'Category is required';
+    if (!formData.title.trim()) errors.title = t.validationTitle;
+    if (!formData.content.trim()) errors.content = t.validationContent;
+    if (!formData.excerpt.trim()) errors.excerpt = t.validationExcerpt;
+    if (formData.excerpt.length > 200) errors.excerpt = t.validationExcerptLength;
+    if (!formData.category) errors.category = t.validationCategory;
     
     // For new articles, require featured image or video
     if (!selectedArticle && formData.mediaType === 'image' && !formData.featuredImage) {
-      errors.featuredImage = 'Featured image is required';
+      errors.featuredImage = t.validationImage;
     }
     if (!selectedArticle && formData.mediaType === 'video' && !formData.featuredVideo) {
-      errors.featuredVideo = 'Featured video is required';
+      errors.featuredVideo = t.validationVideo;
     }
     
     setFormErrors(errors);
@@ -169,10 +258,10 @@ const BlogAdmin = () => {
         setArticles(prev => prev.map(article => 
           article._id === selectedArticle._id ? data.blog : article
         ));
-        setFormSuccess('Article updated successfully!');
+        setFormSuccess(t.saveSuccessUpdate);
       } else {
         setArticles(prev => [data.blog, ...prev]);
-        setFormSuccess('Article created successfully!');
+        setFormSuccess(t.saveSuccessCreate);
         
         // Reset form for new article
         setFormData({
@@ -197,7 +286,7 @@ const BlogAdmin = () => {
       
     } catch (error) {
       console.error('Error saving article:', error);
-      setError('Failed to save article. Please try again.');
+      setError(t.saveFail);
     } finally {
       setLoading(false);
     }
@@ -205,17 +294,17 @@ const BlogAdmin = () => {
 
   // Handle article deletion
   const handleDeleteArticle = async (id) => {
-    if (window.confirm('Are you sure you want to delete this article?')) {
+    if (window.confirm(t.deleteConfirm)) {
       try {
         setLoading(true);
         await axiosInstance.delete(`${API_ENDPOINTS.blogArticles}/admin/${id}`);
 
         // Remove the deleted article from the state
         setArticles(prev => prev.filter(article => article._id !== id));
-        alert('Article deleted successfully!');
+        alert(t.deleteSuccess);
       } catch (error) {
         console.error('Error deleting article:', error);
-        alert(`Failed to delete article: ${error.response?.data?.error || error.message}`);
+        alert(`${t.deleteFail} ${error.response?.data?.error || error.message}`);
       } finally {
         setLoading(false);
       }
@@ -269,18 +358,19 @@ const BlogAdmin = () => {
     }
   };
 
+  // Get status label
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'published': return t.published;
+      case 'draft': return t.draft;
+      case 'archived': return t.archived;
+      default: return status;
+    }
+  };
+
   // Get category label
   const getCategoryLabel = (category) => {
-    const categories = {
-      sermon: 'Sermon',
-      event: 'Event',
-      announcement: 'Announcement',
-      testimony: 'Testimony',
-      prayer: 'Prayer',
-      community: 'Community',
-      other: 'Other'
-    };
-    return categories[category] || category;
+    return t.categories[category] || category;
   };
 
   // Article List View
@@ -290,8 +380,8 @@ const BlogAdmin = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Blog Articles</h1>
-            <p className="text-gray-600">Manage your church blog articles</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.blogArticles}</h1>
+            <p className="text-gray-600">{t.manageBlog}</p>
           </div>
           <div className="flex items-center space-x-3 mt-4 md:mt-0">
             <button
@@ -314,7 +404,7 @@ const BlogAdmin = () => {
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>New Article</span>
+              <span>{t.newArticle}</span>
             </button>
             <button
               onClick={fetchArticles}
@@ -322,7 +412,7 @@ const BlogAdmin = () => {
               className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
+              <span>{t.refresh}</span>
             </button>
           </div>
         </div>
@@ -335,7 +425,7 @@ const BlogAdmin = () => {
             <Search className="w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by title or excerpt..."
+              placeholder={t.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -348,24 +438,24 @@ const BlogAdmin = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">All Status</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-              <option value="archived">Archived</option>
+              <option value="all">{t.allStatus}</option>
+              <option value="published">{t.published}</option>
+              <option value="draft">{t.draft}</option>
+              <option value="archived">{t.archived}</option>
             </select>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">All Categories</option>
-              <option value="sermon">Sermon</option>
-              <option value="event">Event</option>
-              <option value="announcement">Announcement</option>
-              <option value="testimony">Testimony</option>
-              <option value="prayer">Prayer</option>
-              <option value="community">Community</option>
-              <option value="other">Other</option>
+              <option value="all">{t.allCategories}</option>
+              <option value="sermon">{t.categories.sermon}</option>
+              <option value="event">{t.categories.event}</option>
+              <option value="announcement">{t.categories.announcement}</option>
+              <option value="testimony">{t.categories.testimony}</option>
+              <option value="prayer">{t.categories.prayer}</option>
+              <option value="community">{t.categories.community}</option>
+              <option value="other">{t.categories.other}</option>
             </select>
           </div>
         </div>
@@ -375,14 +465,14 @@ const BlogAdmin = () => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Articles ({filteredArticles.length})
+            {t.articlesCount(filteredArticles.length)}
           </h2>
         </div>
 
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading articles...</p>
+            <p className="text-gray-600">{t.loading}</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-500">
@@ -392,13 +482,13 @@ const BlogAdmin = () => {
               onClick={fetchArticles}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Retry
+              {t.retry}
             </button>
           </div>
         ) : filteredArticles.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No articles found</p>
+            <p>{t.noArticles}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -406,19 +496,19 @@ const BlogAdmin = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Article
+                    {t.articleHeader}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
+                    {t.categoryHeader}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    {t.dateHeader}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t.statusHeader}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t.actionsHeader}
                   </th>
                 </tr>
               </thead>
@@ -466,7 +556,7 @@ const BlogAdmin = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(article.status)}`}>
-                        {article.status.charAt(0).toUpperCase() + article.status.slice(1)}
+                        {getStatusLabel(article.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -474,7 +564,7 @@ const BlogAdmin = () => {
                         <button
                           onClick={() => handleEditArticle(article)}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100"
-                          title="Edit Article"
+                          title={t.editArticle}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -484,14 +574,14 @@ const BlogAdmin = () => {
                             setCurrentView('view');
                           }}
                           className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-100"
-                          title="View Article"
+                          title={t.viewArticle}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteArticle(article._id)}
                           className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100"
-                          title="Delete Article"
+                          title={t.deleteArticle}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -515,10 +605,10 @@ const BlogAdmin = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {selectedArticle ? 'Edit Article' : 'Create New Article'}
+              {selectedArticle ? t.editArticle : t.createArticle}
             </h1>
             <p className="text-gray-600">
-              {selectedArticle ? 'Update your existing article' : 'Add a new article to your blog'}
+              {selectedArticle ? t.updateExisting : t.addNew}
             </p>
           </div>
           <button
@@ -528,7 +618,7 @@ const BlogAdmin = () => {
             }}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
-            Back to List
+            {t.backToList}
           </button>
         </div>
       </div>
@@ -537,7 +627,7 @@ const BlogAdmin = () => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Article Details
+            {t.articleDetails}
           </h2>
         </div>
 
@@ -557,7 +647,7 @@ const BlogAdmin = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
-                Title *
+                {t.title}
               </label>
               <input
                 type="text"
@@ -566,14 +656,14 @@ const BlogAdmin = () => {
                 value={formData.title}
                 onChange={handleInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.title ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="Enter article title"
+                placeholder={t.titlePlaceholder}
               />
               {formErrors.title && <p className="mt-1 text-sm text-red-500">{formErrors.title}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="category">
-                Category *
+                {t.category}
               </label>
               <select
                 id="category"
@@ -582,13 +672,13 @@ const BlogAdmin = () => {
                 onChange={handleInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.category ? 'border-red-500' : 'border-gray-300'}`}
               >
-                <option value="sermon">Sermon</option>
-                <option value="event">Event</option>
-                <option value="announcement">Announcement</option>
-                <option value="testimony">Testimony</option>
-                <option value="prayer">Prayer</option>
-                <option value="community">Community</option>
-                <option value="other">Other</option>
+                <option value="sermon">{t.categories.sermon}</option>
+                <option value="event">{t.categories.event}</option>
+                <option value="announcement">{t.categories.announcement}</option>
+                <option value="testimony">{t.categories.testimony}</option>
+                <option value="prayer">{t.categories.prayer}</option>
+                <option value="community">{t.categories.community}</option>
+                <option value="other">{t.categories.other}</option>
               </select>
               {formErrors.category && <p className="mt-1 text-sm text-red-500">{formErrors.category}</p>}
             </div>
@@ -596,7 +686,7 @@ const BlogAdmin = () => {
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="excerpt">
-              Excerpt * (max 200 characters)
+              {t.excerpt}
             </label>
             <textarea
               id="excerpt"
@@ -605,20 +695,20 @@ const BlogAdmin = () => {
               onChange={handleInputChange}
               rows="2"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.excerpt ? 'border-red-500' : 'border-gray-300'}`}
-              placeholder="Brief summary of the article"
+              placeholder={t.excerptPlaceholder}
             ></textarea>
             <div className="flex justify-between mt-1">
               {formErrors.excerpt ? (
                 <p className="text-sm text-red-500">{formErrors.excerpt}</p>
               ) : (
-                <p className="text-sm text-gray-500">{formData.excerpt.length}/200 characters</p>
+                <p className="text-sm text-gray-500">{formData.excerpt.length}/200 {isTamil ? 'எழுத்துக்கள்' : 'characters'}</p>
               )}
             </div>
           </div>
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="content">
-              Content *
+              {t.content}
             </label>
             <textarea
               id="content"
@@ -627,14 +717,14 @@ const BlogAdmin = () => {
               onChange={handleInputChange}
               rows="10"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.content ? 'border-red-500' : 'border-gray-300'}`}
-              placeholder="Full article content"
+              placeholder={t.contentPlaceholder}
             ></textarea>
             {formErrors.content && <p className="mt-1 text-sm text-red-500">{formErrors.content}</p>}
           </div>
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="tags">
-              Tags (comma separated)
+              {t.tags}
             </label>
             <input
               type="text"
@@ -643,14 +733,14 @@ const BlogAdmin = () => {
               value={formData.tags}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="faith, prayer, community"
+              placeholder={t.tagsPlaceholder}
             />
-            <p className="mt-1 text-sm text-gray-500">Separate tags with commas</p>
+            <p className="mt-1 text-sm text-gray-500">{t.tagsHint}</p>
           </div>
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Media Type
+              {t.mediaType}
             </label>
             <div className="flex space-x-4">
               <label className="inline-flex items-center">
@@ -662,7 +752,7 @@ const BlogAdmin = () => {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700">Image</span>
+                <span className="ml-2 text-gray-700">{t.image}</span>
               </label>
               <label className="inline-flex items-center">
                 <input
@@ -673,7 +763,7 @@ const BlogAdmin = () => {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700">Video</span>
+                <span className="ml-2 text-gray-700">{t.video}</span>
               </label>
               <label className="inline-flex items-center">
                 <input
@@ -684,7 +774,7 @@ const BlogAdmin = () => {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700">Both</span>
+                <span className="ml-2 text-gray-700">{t.both}</span>
               </label>
             </div>
           </div>
@@ -693,7 +783,7 @@ const BlogAdmin = () => {
             {(formData.mediaType === 'image' || formData.mediaType === 'both') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="featuredImage">
-                  Featured Image {!selectedArticle && formData.mediaType === 'image' ? '*' : ''}
+                  {t.featuredImage} {!selectedArticle && formData.mediaType === 'image' ? '*' : ''}
                 </label>
                 <div className="flex items-center space-x-4">
                   <div className="flex-1">
@@ -713,14 +803,14 @@ const BlogAdmin = () => {
                     </div>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-gray-500">Recommended size: 1200x630 pixels, max 5MB</p>
+                <p className="mt-1 text-sm text-gray-500">{t.imageHint}</p>
               </div>
             )}
 
             {(formData.mediaType === 'video' || formData.mediaType === 'both') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="featuredVideo">
-                  Featured Video {!selectedArticle && formData.mediaType === 'video' ? '*' : ''}
+                  {t.featuredVideo} {!selectedArticle && formData.mediaType === 'video' ? '*' : ''}
                 </label>
                 <input
                   type="file"
@@ -731,14 +821,14 @@ const BlogAdmin = () => {
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.featuredVideo ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {formErrors.featuredVideo && <p className="mt-1 text-sm text-red-500">{formErrors.featuredVideo}</p>}
-                <p className="mt-1 text-sm text-gray-500">Max file size: 50MB</p>
+                <p className="mt-1 text-sm text-gray-500">{t.videoHint}</p>
               </div>
             )}
           </div>
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="status">
-              Status
+              {t.status}
             </label>
             <select
               id="status"
@@ -747,14 +837,14 @@ const BlogAdmin = () => {
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
+              <option value="draft">{t.draft}</option>
+              <option value="published">{t.published}</option>
+              <option value="archived">{t.archived}</option>
             </select>
             <p className="mt-1 text-sm text-gray-500">
-              {formData.status === 'published' ? 'Article will be visible to the public' : 
-               formData.status === 'draft' ? 'Save as draft to publish later' : 
-               'Archived articles are not visible to the public'}
+              {formData.status === 'published' ? t.statusPublishedHint : 
+               formData.status === 'draft' ? t.statusDraftHint : 
+               t.statusArchivedHint}
             </p>
           </div>
 
@@ -767,7 +857,7 @@ const BlogAdmin = () => {
               }}
               className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="submit"
@@ -777,10 +867,10 @@ const BlogAdmin = () => {
               {loading ? (
                 <span className="flex items-center">
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  {t.saving}
                 </span>
               ) : (
-                <span>Save Article</span>
+                <span>{t.saveArticle}</span>
               )}
             </button>
           </div>
@@ -800,10 +890,10 @@ const BlogAdmin = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Article Preview
+                {t.previewTitle}
               </h1>
               <p className="text-gray-600">
-                Preview how your article will appear to readers
+                {t.previewHint}
               </p>
             </div>
             <div className="flex space-x-3">
@@ -812,7 +902,7 @@ const BlogAdmin = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Edit className="w-4 h-4 mr-2 inline" />
-                Edit
+                {t.edit}
               </button>
               <button
                 onClick={() => {
@@ -821,7 +911,7 @@ const BlogAdmin = () => {
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Back to List
+                {t.backToList}
               </button>
             </div>
           </div>
@@ -836,7 +926,7 @@ const BlogAdmin = () => {
                 {getCategoryLabel(selectedArticle.category)}
               </span>
               <span className={`inline-block ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedArticle.status)}`}>
-                {selectedArticle.status.charAt(0).toUpperCase() + selectedArticle.status.slice(1)}
+                {getStatusLabel(selectedArticle.status)}
               </span>
             </div>
             <h1 className="text-4xl font-bold mb-4 leading-tight">
@@ -845,7 +935,7 @@ const BlogAdmin = () => {
             <div className="flex items-center space-x-6 text-white/90">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
-                <span>{selectedArticle.author?.username || 'Admin'}</span>
+                <span>{selectedArticle.author?.username || (isTamil ? 'நிர்வாகி' : 'Admin')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4" />
@@ -853,7 +943,7 @@ const BlogAdmin = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Eye className="w-4 h-4" />
-                <span>{selectedArticle.views || 0} views</span>
+                <span>{selectedArticle.views || 0} {t.views}</span>
               </div>
             </div>
           </div>
@@ -901,11 +991,11 @@ const BlogAdmin = () => {
                 <div className="flex items-center space-x-4">
                   <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-800">
                     <Share2 className="w-5 h-5" />
-                    <span>Share</span>
+                    <span>{t.share}</span>
                   </button>
                   <button className="flex items-center space-x-2 text-green-600 hover:text-green-800">
                     <Download className="w-5 h-5" />
-                    <span>Download</span>
+                    <span>{t.download}</span>
                   </button>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -915,7 +1005,7 @@ const BlogAdmin = () => {
                   </button>
                   <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
                     <MessageCircle className="w-5 h-5" />
-                    <span>Comment</span>
+                    <span>{t.comment}</span>
                   </button>
                 </div>
               </div>

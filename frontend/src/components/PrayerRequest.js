@@ -82,29 +82,6 @@ const PrayerRequest = () => {
     }));
   };
   
-  // Function to send notification to admin
-  const notifyAdmin = async (requestData) => {
-    try {
-      // Use the admin endpoint to send notification
-      await axiosInstance.post(`${API_ENDPOINTS.admin}/notifications`, {
-        type: 'prayer_request',
-        message: `New prayer request from ${requestData.name}`,
-        details: {
-          name: requestData.name,
-          email: requestData.email,
-          requestType: requestData.requestType,
-          isConfidential: requestData.isConfidential,
-          timestamp: new Date().toISOString()
-        },
-        priority: 'high'
-      }, { requiresAuth: false });
-      
-      console.log('Admin notification sent successfully');
-    } catch (err) {
-      console.error('Error sending admin notification:', err);
-    }
-  };
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -118,18 +95,8 @@ const PrayerRequest = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real application, you would send this data to your backend
-      // const response = await fetch('/api/prayer-requests', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Send notification to admin
-      await notifyAdmin(formData);
+      // Send data to backend
+      await axiosInstance.post(API_ENDPOINTS.prayerRequests, formData, { requiresAuth: false });
       
       setSubmitted(true);
       setFormData({

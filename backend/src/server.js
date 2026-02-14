@@ -26,7 +26,7 @@ if (missingEnvVars.length > 0) {
 const { setupConnectionEvents, retryConnection } = require('./config/database');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -203,6 +203,7 @@ const eventRegistrationRoutes = require('./routes/eventRegistrationRoutes');
 const uploadRoutes = require('./routes/upload');
 const eventRoutes = require('./routes/events');
 const contactRoutes = require('./routes/contact');
+const prayerRequestRoutes = require('./routes/prayerRequests');
 
 // Ensure upload directories exist
 const ensureUploadDirs = () => {
@@ -232,6 +233,7 @@ app.use('/api/eventregistration', eventRegistrationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/prayer-requests', prayerRequestRoutes);
 
 // Create donation (initial step)
 app.post('/api/donations', async (req, res) => {

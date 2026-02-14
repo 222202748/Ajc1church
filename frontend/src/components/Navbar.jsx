@@ -1,42 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  Menu, 
+  X, 
+  Globe, 
+  ChevronRight
+} from 'lucide-react';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [currentPage, setCurrentPage] = useState('/');
   const { language, toggleLanguage } = useLanguage();
+  const location = useLocation();
+  const currentPage = location.pathname;
 
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
     const handleScroll = () => {
-      const offset = window.scrollY;
-      setScrolled(offset > 50);
+      setScrolled(window.scrollY > 20);
     };
 
-    const updateCurrentPage = () => {
-      setCurrentPage(window.location.pathname);
-    };
-
-    checkScreenSize();
-    updateCurrentPage();
-    window.addEventListener('resize', checkScreenSize);
     window.addEventListener('scroll', handleScroll);
-    window.addEventListener('popstate', updateCurrentPage);
 
     return () => {
-      window.removeEventListener('resize', checkScreenSize);
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('popstate', updateCurrentPage);
     };
   }, []);
 
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMobileMenuOpen]);
+
   const handleNavClick = () => {
     setIsMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleMobileMenu = () => {
@@ -44,31 +45,18 @@ const Header = () => {
   };
 
   const getNavLinks = () => {
-    if (language === 'tamil') {
-      return [
-        { to: '/', label: 'முகப்பு' },
-        { to: '/events', label: 'நிகழ்வுகள்' },
-        { to: '/blog', label: 'வலைப்பதிவு' },
-        { to: '/pastors', label: 'பாஸ்டர்கள்' },
-        { to: '/service-schedule', label: 'சேவை அட்டவணை' },
-        { to: '/prayer-request', label: 'பிரார்த்தனை கோரிக்கை' },
-        { to: '/contact', label: 'தொடர்பு' },
-        { to: '/Admin', label: 'நிர்வாகி' },
-        { to: '/Donate', label: 'நன்கொடை' }
-      ];
-    } else {
-      return [
-        { to: '/', label: 'Home' },
-        { to: '/events', label: 'Events' },
-        { to: '/blog', label: 'Blog' },
-        { to: '/pastors', label: 'Pastors' },
-        { to: '/service-schedule', label: 'Service Schedule' },
-        { to: '/prayer-request', label: 'Prayer Request' },
-        { to: '/contact', label: 'Contact' },
-        { to: '/admin', label: 'Admin' },
-        { to: '/donate', label: 'Donation' }
-      ];
-    }
+    const isTamil = language === 'tamil';
+    return [
+      { to: '/', label: isTamil ? 'முகப்பு' : 'Home' },
+      { to: '/events', label: isTamil ? 'நிகழ்வுகள்' : 'Events' },
+      { to: '/blog', label: isTamil ? 'வலைப்பதிவு' : 'Blog' },
+      { to: '/pastors', label: isTamil ? 'பாஸ்டர்கள்' : 'Pastors' },
+      { to: '/service-schedule', label: isTamil ? 'சேவை அட்டவணை' : 'Schedule' },
+      { to: '/prayer-request', label: isTamil ? 'பிரார்த்தனை' : 'Prayer' },
+      { to: '/contact', label: isTamil ? 'தொடர்பு' : 'Contact' },
+      { to: '/admin', label: isTamil ? 'நிர்வாகி' : 'Admin' },
+      { to: '/donate', label: isTamil ? 'நன்கொடை' : 'Donate', highlight: true }
+    ];
   };
 
   const isCurrentPage = (path) => {
@@ -77,492 +65,141 @@ const Header = () => {
     return false;
   };
 
-  const headerStyles = {
-    background: scrolled 
-      ? 'linear-gradient(135deg, rgba(139, 69, 19, 0.95) 0%, rgba(160, 82, 45, 0.95) 50%, rgba(139, 69, 19, 0.95) 100%)'
-      : 'linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #CD853F 50%, #A0522D 75%, #8B4513 100%)',
-    padding: isMobile ? (scrolled ? '10px 0' : '15px 0') : (scrolled ? '12px 0' : '18px 0'),
-    boxShadow: scrolled 
-      ? '0 4px 20px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.1)'
-      : '0 2px 10px rgba(0,0,0,0.2)',
-    position: 'sticky',
-    top: '0',
-    zIndex: '1000',
-    width: '100%',
-    backdropFilter: scrolled ? 'blur(10px)' : 'none',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    borderBottom: scrolled ? '1px solid rgba(255,255,255,0.1)' : 'none'
-  };
-
-  const containerStyles = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: isMobile ? '0 16px' : '0 24px',
-    width: '100%',
-    boxSizing: 'border-box',
-    position: 'relative'
-  };
-
-  const logoContainerStyles = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: isMobile ? '10px' : '15px',
-    textDecoration: 'none',
-    zIndex: '1001',
-    transition: 'transform 0.3s ease',
-    cursor: 'pointer',
-    minWidth: 'fit-content'
-  };
-
-  const logoIconStyles = {
-    width: isMobile ? (scrolled ? '40px' : '45px') : (scrolled ? '50px' : '55px'),
-    height: isMobile ? (scrolled ? '40px' : '45px') : (scrolled ? '50px' : '55px'),
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.1)',
-    overflow: 'hidden',
-    flexShrink: 0,
-    transition: 'all 0.3s ease',
-    border: '3px solid rgba(255,255,255,0.8)',
-    position: 'relative'
-  };
-
-  const logoImageStyles = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    transition: 'transform 0.3s ease'
-  };
-
-  const logoTextStyles = {
-    fontSize: isMobile ? (scrolled ? '20px' : '22px') : (scrolled ? '26px' : '30px'),
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    margin: '0',
-    fontFamily: 'serif',
-    textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.3s ease',
-    letterSpacing: '1px',
-    position: 'relative'
-  };
-
-  // Improved desktop navigation styles for better visibility
-  const desktopNavStyles = {
-    display: isMobile ? 'none' : 'flex',
-    gap: '6px',
-    alignItems: 'center',
-    background: 'rgba(255,255,255,0.15)',
-    borderRadius: '50px',
-    padding: '10px 15px',
-    backdropFilter: 'blur(15px)',
-    border: '2px solid rgba(255,255,255,0.25)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
-    maxWidth: 'fit-content',
-    flexWrap: 'wrap',
-    justifyContent: 'center'
-  };
-
-  const navLinkStyles = {
-    color: '#FFFFFF',
-    textDecoration: 'none',
-    fontSize: '15px',
-    fontWeight: '600',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    padding: '12px 18px',
-    borderRadius: '30px',
-    whiteSpace: 'nowrap',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    position: 'relative',
-    overflow: 'hidden',
-    textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-    border: '1px solid transparent'
-  };
-
-  const getNavLinkStyles = (path) => ({
-    ...navLinkStyles,
-    background: isCurrentPage(path) 
-      ? 'linear-gradient(45deg, #4CAF50, #45a049)'
-      : 'rgba(255,255,255,0.1)',
-    boxShadow: isCurrentPage(path) 
-      ? '0 6px 20px rgba(76, 175, 80, 0.4), inset 0 1px 0 rgba(255,255,255,0.3)'
-      : '0 2px 8px rgba(0,0,0,0.1)',
-    border: isCurrentPage(path) 
-      ? '1px solid rgba(76, 175, 80, 0.5)'
-      : '1px solid rgba(255,255,255,0.2)',
-    transform: isCurrentPage(path) ? 'translateY(-1px)' : 'translateY(0)'
-  });
-
-  const mobileMenuButtonStyles = {
-    display: isMobile ? 'flex' : 'none',
-    background: 'rgba(255,255,255,0.15)',
-    border: '2px solid rgba(255,255,255,0.3)',
-    color: '#FFFFFF',
-    fontSize: '22px',
-    cursor: 'pointer',
-    zIndex: '1001',
-    padding: '12px',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '15px',
-    transition: 'all 0.3s ease',
-    backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-    width: '48px',
-    height: '48px',
-    minWidth: '48px'
-  };
-
-  const mobileMenuOverlayStyles = {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    right: '0',
-    bottom: '0',
-    background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.98) 0%, rgba(160, 82, 45, 0.98) 50%, rgba(139, 69, 19, 0.98) 100%)',
-    backdropFilter: 'blur(20px)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '16px',
-    zIndex: '1000',
-    padding: '20px',
-    boxSizing: 'border-box',
-    animation: 'slideIn 0.3s ease-out',
-    overflowY: 'auto'
-  };
-
-  const mobileNavLinkStyles = {
-    color: '#FFFFFF',
-    textDecoration: 'none',
-    fontSize: '18px',
-    fontWeight: '600',
-    padding: '16px 28px',
-    borderRadius: '20px',
-    transition: 'all 0.3s ease',
-    textAlign: 'center',
-    minWidth: '220px',
-    border: '2px solid rgba(255,255,255,0.3)',
-    background: 'rgba(255,255,255,0.15)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
-    boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-    textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
-  };
-
-  const getMobileNavLinkStyles = (path) => ({
-    ...mobileNavLinkStyles,
-    background: isCurrentPage(path) 
-      ? 'linear-gradient(45deg, #4CAF50, #45a049)'
-      : 'rgba(255,255,255,0.15)',
-    border: isCurrentPage(path) 
-      ? '2px solid #4CAF50'
-      : '2px solid rgba(255,255,255,0.3)',
-    boxShadow: isCurrentPage(path) 
-      ? '0 8px 25px rgba(76, 175, 80, 0.4), inset 0 1px 0 rgba(255,255,255,0.3)'
-      : '0 6px 20px rgba(0,0,0,0.2)'
-  });
-
-  const languageSwitcherStyles = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    color: '#FFFFFF',
-    background: 'rgba(255,255,255,0.2)',
-    border: '2px solid rgba(255,255,255,0.3)',
-    borderRadius: '25px',
-    padding: '10px 16px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    fontSize: '14px',
-    fontWeight: '600',
-    backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-    marginLeft: isMobile ? '0' : '12px',
-    position: 'relative',
-    overflow: 'hidden',
-    textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-    minWidth: 'fit-content'
-  };
-
-  const rightSectionStyles = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    minWidth: 'fit-content'
-  };
-
-  // Add keyframes for animations
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = `
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-100%);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
-      }
-      70% {
-        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-      }
-    }
-    
-    @keyframes shimmer {
-      0% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(100%);
-      }
-    }
-
-    /* Responsive navbar adjustments */
-    @media (max-width: 1200px) and (min-width: 769px) {
-      .nav-link {
-        font-size: 14px !important;
-        padding: 10px 14px !important;
-      }
-    }
-
-    @media (max-width: 1000px) and (min-width: 769px) {
-      .nav-link {
-        font-size: 13px !important;
-        padding: 8px 12px !important;
-      }
-    }
-  `;
-  if (!document.querySelector('#header-styles')) {
-    styleSheet.id = 'header-styles';
-    document.head.appendChild(styleSheet);
-  }
-
   return (
-    <header style={headerStyles}>
-      <div style={containerStyles}>
-        <a 
-          href="/" 
-          style={logoContainerStyles}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-        >
-          <div 
-            style={logoIconStyles}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'rotate(5deg) scale(1.1)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'rotate(0deg) scale(1)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
-            }}
+    <header className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ${
+      scrolled 
+        ? 'bg-[#8B4513]/95 backdrop-blur-md shadow-lg py-2' 
+        : 'bg-[#8B4513] py-4'
+    }`}>
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Logo Section */}
+          <Link 
+            to="/" 
+            onClick={handleNavClick}
+            className="flex items-center gap-3 group shrink-0"
           >
-            <img 
-              src="/logo.jpg"
-              alt="AJC Church Logo" 
-              style={logoImageStyles}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/favicon.ico';
-              }}
-            />
-          </div>
-          <div>
-            <h1 style={logoTextStyles}>AJC</h1>
-            <div style={{
-              fontSize: isMobile ? '11px' : '13px',
-              color: 'rgba(255,255,255,0.9)',
-              fontWeight: '500',
-              marginTop: '-5px',
-              letterSpacing: '0.5px',
-              textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-            }}>
-              {language === 'tamil' ? 'திருச்சபை' : 'Church'}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white overflow-hidden shadow-md group-hover:scale-110 transition-transform duration-300">
+              <img 
+                src="/logo.jpg" 
+                alt="Logo" 
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.src = '/favicon.ico'; }}
+              />
             </div>
-          </div>
-        </a>
-
-        {/* Desktop Navigation Menu */}
-        <nav style={desktopNavStyles}>
-          {getNavLinks().map((link) => (
-            <a
-              key={link.to}
-              href={link.to}
-              onClick={handleNavClick}
-              className="nav-link"
-              style={getNavLinkStyles(link.to)}
-              onMouseEnter={(e) => {
-                if (!isCurrentPage(link.to)) {
-                  e.target.style.background = 'linear-gradient(45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.15))';
-                  e.target.style.borderColor = 'rgba(255,255,255,0.4)';
-                }
-                e.target.style.transform = 'translateY(-3px) scale(1.02)';
-                e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.25)';
-              }}
-              onMouseLeave={(e) => {
-                if (!isCurrentPage(link.to)) {
-                  e.target.style.background = 'rgba(255,255,255,0.1)';
-                  e.target.style.borderColor = 'rgba(255,255,255,0.2)';
-                  e.target.style.transform = 'translateY(0) scale(1)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                } else {
-                  e.target.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-                  e.target.style.borderColor = 'rgba(76, 175, 80, 0.5)';
-                  e.target.style.transform = 'translateY(-1px) scale(1)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(76, 175, 80, 0.4), inset 0 1px 0 rgba(255,255,255,0.3)';
-                }
-              }}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* Right Section with Language Switcher and Mobile Menu */}
-        <div style={rightSectionStyles}>
-          <button
-            onClick={toggleLanguage}
-            style={{
-              ...languageSwitcherStyles,
-              display: isMobile ? 'none' : 'flex'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'linear-gradient(45deg, rgba(255,255,255,0.35), rgba(255,255,255,0.25))';
-              e.target.style.transform = 'translateY(-2px) scale(1.05)';
-              e.target.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.2)';
-              e.target.style.transform = 'translateY(0) scale(1)';
-              e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>🌐</span>
-            {language === 'tamil' ? 'தமிழ்' : 'EN'}
-          </button>
-
-          {/* Mobile Language Switcher */}
-          <button
-            onClick={toggleLanguage}
-            style={{
-              ...languageSwitcherStyles,
-              display: isMobile ? 'flex' : 'none',
-              padding: '10px 14px',
-              minWidth: 'auto'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.3)';
-              e.target.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.2)';
-              e.target.style.transform = 'scale(1)';
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>🌐</span>
-            {language === 'tamil' ? 'தமிழ்' : 'EN'}
-          </button>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={toggleMobileMenu}
-            style={mobileMenuButtonStyles}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.25)';
-              e.target.style.transform = 'scale(1.1)';
-              e.target.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.15)';
-              e.target.style.transform = 'scale(1)';
-              e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-            }}
-          >
-            <div style={{
-              transform: isMobileMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s ease'
-            }}>
-              {isMobileMenuOpen ? '✕' : '☰'}
+            <div className="flex flex-col">
+              <span className="text-white font-bold text-xl sm:text-2xl tracking-tight leading-none">AJC</span>
+              <span className={`text-white/80 font-medium ${
+                language === 'tamil' ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'
+              }`}>
+                {language === 'tamil' ? 'திருச்சபை' : 'Church'}
+              </span>
             </div>
-          </button>
-        </div>
+          </Link>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div style={mobileMenuOverlayStyles}>
-            <div style={{
-              position: 'absolute',
-              top: '25px',
-              right: '25px',
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: '16px',
-              fontWeight: '500',
-              textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-            }}>
-              {language === 'tamil' ? 'மெனு' : 'Menu'}
-            </div>
-            {getNavLinks().map((link, index) => (
-              <a
+          {/* Desktop Navigation */}
+          <nav className="hidden xl:flex items-center gap-0.5 bg-white/5 p-1 rounded-2xl border border-white/10">
+            {getNavLinks().map((link) => (
+              <Link
                 key={link.to}
-                href={link.to}
+                to={link.to}
                 onClick={handleNavClick}
-                style={{
-                  ...getMobileNavLinkStyles(link.to),
-                  animationDelay: `${index * 0.1}s`
-                }}
-                onMouseEnter={(e) => {
-                  if (!isCurrentPage(link.to)) {
-                    e.target.style.background = 'linear-gradient(45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.15))';
-                  }
-                  e.target.style.borderColor = '#FFFFFF';
-                  e.target.style.transform = 'scale(1.05) translateY(-3px)';
-                  e.target.style.boxShadow = '0 12px 30px rgba(0,0,0,0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  if (!isCurrentPage(link.to)) {
-                    e.target.style.background = 'rgba(255,255,255,0.15)';
-                    e.target.style.borderColor = 'rgba(255,255,255,0.3)';
-                  } else {
-                    e.target.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-                    e.target.style.borderColor = '#4CAF50';
-                  }
-                  e.target.style.transform = 'scale(1) translateY(0)';
-                  e.target.style.boxShadow = isCurrentPage(link.to) 
-                    ? '0 8px 25px rgba(76, 175, 80, 0.4), inset 0 1px 0 rgba(255,255,255,0.3)'
-                    : '0 6px 20px rgba(0,0,0,0.2)';
-                }}
+                className={`flex items-center px-3 py-2.5 rounded-xl font-bold transition-all duration-300 whitespace-nowrap ${
+                  language === 'tamil' 
+                    ? 'text-[13px] 2xl:text-sm' 
+                    : 'text-[15px] 2xl:text-[17px]'
+                } ${
+                  isCurrentPage(link.to)
+                    ? 'bg-white text-[#8B4513] shadow-sm'
+                    : link.highlight 
+                      ? 'bg-yellow-500 text-white hover:bg-yellow-400'
+                      : 'text-white/90 hover:bg-white/10 hover:text-white'
+                }`}
               >
                 {link.label}
-              </a>
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right Section: Language & Mobile Toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleLanguage}
+              className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-base font-bold hover:bg-white/20 transition-all"
+            >
+              <Globe size={18} />
+              {language === 'tamil' ? 'தமிழ்' : 'English'}
+            </button>
+
+            <button
+              onClick={toggleMobileMenu}
+              className="xl:hidden p-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+              aria-label="Toggle Menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`fixed inset-0 z-[999] xl:hidden transition-all duration-500 ${
+        isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+      }`}>
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={toggleMobileMenu}
+        />
+        
+        {/* Menu Content */}
+        <div className={`absolute top-0 right-0 bottom-0 w-[280px] sm:w-[320px] bg-[#8B4513] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${
+          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+          <div className="p-6 flex items-center justify-between border-b border-white/10">
+            <span className="text-white font-bold text-lg">
+              {language === 'tamil' ? 'மெனு' : 'Menu'}
+            </span>
+            <button 
+              onClick={toggleMobileMenu}
+              className="p-2 rounded-lg bg-white/10 text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            {getNavLinks().map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={handleNavClick}
+                className={`flex items-center justify-between px-4 py-4 rounded-xl transition-all duration-300 ${
+                  isCurrentPage(link.to)
+                    ? 'bg-white text-[#8B4513]'
+                    : 'text-white/90 hover:bg-white/10'
+                }`}
+              >
+                <div className="flex items-center">
+                  <span className={`font-bold ${language === 'tamil' ? 'text-base' : 'text-lg'}`}>
+                    {link.label}
+                  </span>
+                </div>
+                <ChevronRight size={18} className="opacity-40" />
+              </Link>
             ))}
           </div>
-        )}
+
+          <div className="p-6 border-t border-white/10">
+            <button
+              onClick={toggleLanguage}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold hover:bg-white/20 transition-all"
+            >
+              <Globe size={20} />
+              {language === 'tamil' ? 'தமிழ் மொழிக்கு மாற்றவும்' : 'Switch to Tamil'}
+            </button>
+          </div>
+        </div>
       </div>
     </header>
   );
