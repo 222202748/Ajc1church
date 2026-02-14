@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import SermonVideoUpload from './SermonVideoUpload';
 import EventAdmin from './EventAdmin';
 import PrayerRequestAdmin from './PrayerRequestAdmin';
+import ServiceScheduleAdmin from './ServiceScheduleAdmin';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const AdminDashboard = () => {
@@ -22,6 +23,7 @@ const AdminDashboard = () => {
     donations: isTamil ? 'நன்கொடை மேலாண்மை' : 'Donation Management',
     sermons: isTamil ? 'பிரசங்க வீடியோக்கள்' : 'Sermon Videos',
     prayer: isTamil ? 'பிரார்த்தனை கோரிக்கைகள்' : 'Prayer Requests',
+    serviceSchedules: isTamil ? 'சேவை அட்டவணை' : 'Service Schedule',
     blog: isTamil ? 'வலைப்பதிவு மேலாண்மை' : 'Blog Management',
     profile: isTamil ? 'சுயவிவர அமைப்புகள்' : 'Profile Settings',
     refresh: isTamil ? 'புதுப்பிக்கவும்' : 'Refresh',
@@ -646,6 +648,19 @@ const AdminDashboard = () => {
                 </div>
               </button>
               <button
+                onClick={() => setActiveTab('service-schedules')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'service-schedules'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>{t.serviceSchedules}</span>
+                </div>
+              </button>
+              <button
                 onClick={() => navigate('/Admin/blog')}
                 className="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
@@ -673,6 +688,7 @@ const AdminDashboard = () => {
         {activeTab === 'donations' && <DonationDashboard />}
         {activeTab === 'sermons' && <SermonVideoUpload />}
         {activeTab === 'prayer-requests' && <PrayerRequestAdmin />}
+        {activeTab === 'service-schedules' && <ServiceScheduleAdmin />}
       </div>
     </div>
   );

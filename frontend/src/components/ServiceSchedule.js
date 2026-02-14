@@ -1,9 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { API_ENDPOINTS } from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const ServiceSchedule = () => {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState('weekly');
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSchedules = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(API_ENDPOINTS.serviceSchedules);
+      setSchedules(response.data);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [fetchSchedules]);
 
   // Translations
   const translations = {
@@ -14,26 +34,24 @@ const ServiceSchedule = () => {
       special: 'Special Services',
       upcoming: 'Upcoming Events',
       days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      dayNames: {
+        'Sunday': 'Sunday',
+        'Monday': 'Monday',
+        'Tuesday': 'Tuesday',
+        'Wednesday': 'Wednesday',
+        'Thursday': 'Thursday',
+        'Friday': 'Friday',
+        'Saturday': 'Saturday'
+      },
       time: 'Time',
       service: 'Service',
       location: 'Location',
-      mainHall: 'Main Hall',
-      chapelRoom: 'Chapel Room',
-      youthCenter: 'Youth Center',
-      prayerRoom: 'Prayer Room',
-      morningPrayer: 'Morning Prayer',
-      sundaySchool: 'Sunday School',
-      mainService: 'Main Service',
-      eveningService: 'Evening Service',
-      bibleStudy: 'Bible Study',
-      youthService: 'Youth Service',
-      choirPractice: 'Choir Practice',
-      womenFellowship: 'Women Fellowship',
-      menFellowship: 'Men Fellowship',
-      familyPrayer: 'Family Prayer',
+      date: 'Date',
       specialNote: 'Special Note',
       holidaySchedule: 'Holiday schedule may vary. Please check our announcements for updates.',
       viewAll: 'View All Events',
+      loading: 'Loading schedule...',
+      noSchedule: 'No schedules available for this category.'
     },
     tamil: {
       title: 'தேவாலய சேவை அட்டவணை',
@@ -42,59 +60,31 @@ const ServiceSchedule = () => {
       special: 'சிறப்பு சேவைகள்',
       upcoming: 'வரவிருக்கும் நிகழ்வுகள்',
       days: ['ஞாயிறு', 'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி'],
+      dayNames: {
+        'Sunday': 'ஞாயிறு',
+        'Monday': 'திங்கள்',
+        'Tuesday': 'செவ்வாய்',
+        'Wednesday': 'புதன்',
+        'Thursday': 'வியாழன்',
+        'Friday': 'வெள்ளி',
+        'Saturday': 'சனி'
+      },
       time: 'நேரம்',
       service: 'சேவை',
       location: 'இடம்',
-      mainHall: 'முக்கிய மண்டபம்',
-      chapelRoom: 'சிற்றாலயம்',
-      youthCenter: 'இளைஞர் மையம்',
-      prayerRoom: 'ஜெப அறை',
-      morningPrayer: 'காலை ஜெபம்',
-      sundaySchool: 'ஞாயிறு பள்ளி',
-      mainService: 'முக்கிய ஆராதனை',
-      eveningService: 'மாலை ஆராதனை',
-      bibleStudy: 'வேதாகம ஆய்வு',
-      youthService: 'இளைஞர் ஆராதனை',
-      choirPractice: 'பாடகர் குழு பயிற்சி',
-      womenFellowship: 'பெண்கள் ஐக்கியம்',
-      menFellowship: 'ஆண்கள் ஐக்கியம்',
-      familyPrayer: 'குடும்ப ஜெபம்',
+      date: 'தேதி',
       specialNote: 'சிறப்பு குறிப்பு',
       holidaySchedule: 'விடுமுறை அட்டவணை மாறுபடலாம். புதுப்பிப்புகளுக்கு எங்கள் அறிவிப்புகளைப் பார்க்கவும்.',
       viewAll: 'அனைத்து நிகழ்வுகளையும் காண',
+      loading: 'அட்டவணை ஏற்றப்படுகிறது...',
+      noSchedule: 'இந்த வகைக்கு அட்டவணைகள் எதுவும் இல்லை.'
     }
   };
 
   const t = translations[language === 'tamil' ? 'tamil' : 'english'];
 
-  // Weekly service schedule data
-  const weeklyServices = [
-    { day: t.days[0], time: '07:00 AM', service: t.morningPrayer, location: t.prayerRoom },
-    { day: t.days[0], time: '09:00 AM', service: t.sundaySchool, location: t.chapelRoom },
-    { day: t.days[0], time: '10:30 AM', service: t.mainService, location: t.mainHall },
-    { day: t.days[0], time: '06:00 PM', service: t.eveningService, location: t.mainHall },
-    { day: t.days[2], time: '07:00 PM', service: t.bibleStudy, location: t.chapelRoom },
-    { day: t.days[3], time: '06:30 PM', service: t.choirPractice, location: t.mainHall },
-    { day: t.days[5], time: '07:00 PM', service: t.youthService, location: t.youthCenter },
-    { day: t.days[6], time: '04:00 PM', service: t.womenFellowship, location: t.chapelRoom },
-  ];
-
-  // Special services data
-  const specialServices = [
-    { date: '2023-12-24', time: '07:00 PM', service: 'Christmas Eve Service', location: t.mainHall },
-    { date: '2023-12-25', time: '10:00 AM', service: 'Christmas Day Celebration', location: t.mainHall },
-    { date: '2023-12-31', time: '10:30 PM', service: 'New Year Eve Watch Night Service', location: t.mainHall },
-    { date: '2024-01-01', time: '10:30 AM', service: 'New Year Blessing Service', location: t.mainHall },
-    { date: '2024-04-07', time: '06:00 AM', service: 'Easter Sunrise Service', location: t.mainHall },
-  ];
-
-  // Upcoming events data
-  const upcomingEvents = [
-    { date: '2023-11-20', time: '09:00 AM', event: 'Community Outreach Program', location: 'Community Center' },
-    { date: '2023-11-25', time: '10:00 AM', event: 'Children\'s Day Celebration', location: t.mainHall },
-    { date: '2023-12-10', time: '04:00 PM', event: 'Christmas Carol Service', location: t.mainHall },
-    { date: '2023-12-15', time: '06:00 PM', event: 'Youth Christmas Celebration', location: t.youthCenter },
-  ];
+  // Filter schedules by active tab
+  const filteredSchedules = schedules.filter(s => s.type === activeTab);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -191,21 +181,11 @@ const ServiceSchedule = () => {
     fontSize: '14px',
   };
 
-  const buttonStyle = {
-    display: 'block',
-    width: '200px',
-    margin: '30px auto 0',
-    padding: '12px 0',
-    backgroundColor: '#8B4513',
-    color: 'white',
+  const loadingStyle = {
     textAlign: 'center',
-    borderRadius: '50px',
-    textDecoration: 'none',
-    fontWeight: 'bold',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer',
-    border: 'none',
-    boxShadow: '0 4px 10px rgba(139, 69, 19, 0.3)',
+    padding: '40px',
+    color: '#666',
+    fontSize: '18px'
   };
 
   return (
@@ -236,89 +216,45 @@ const ServiceSchedule = () => {
         </div>
       </div>
 
-      {activeTab === 'weekly' && (
+      {loading ? (
+        <div style={loadingStyle}>{t.loading}</div>
+      ) : filteredSchedules.length > 0 ? (
         <div>
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>{t.days[0]}</th>
+                <th style={thStyle}>{activeTab === 'weekly' ? t.days[0] : t.date}</th>
                 <th style={thStyle}>{t.time}</th>
                 <th style={thStyle}>{t.service}</th>
                 <th style={thStyle}>{t.location}</th>
               </tr>
             </thead>
             <tbody>
-              {weeklyServices.map((service, index) => (
-                <tr key={index} style={trStyle(index)}>
-                  <td style={tdStyle}>{service.day}</td>
-                  <td style={tdStyle}>{service.time}</td>
-                  <td style={tdStyle}>{service.service}</td>
-                  <td style={tdStyle}>{service.location}</td>
+              {filteredSchedules.map((schedule, index) => (
+                <tr key={schedule._id || index} style={trStyle(index)}>
+                  <td style={tdStyle}>
+                    {activeTab === 'weekly' 
+                      ? (t.dayNames[schedule.day] || schedule.day)
+                      : formatDate(schedule.date)}
+                  </td>
+                  <td style={tdStyle}>{schedule.time}</td>
+                  <td style={tdStyle}>{schedule.serviceName}</td>
+                  <td style={tdStyle}>{schedule.location}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div style={noteStyle}>
-            <p style={noteTextStyle}>
-              <strong>{t.specialNote}:</strong> {t.holidaySchedule}
-            </p>
-          </div>
+          {activeTab === 'weekly' && (
+            <div style={noteStyle}>
+              <p style={noteTextStyle}>
+                <strong>{t.specialNote}:</strong> {t.holidaySchedule}
+              </p>
+            </div>
+          )}
         </div>
-      )}
-
-      {activeTab === 'special' && (
-        <div>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Date</th>
-                <th style={thStyle}>{t.time}</th>
-                <th style={thStyle}>{t.service}</th>
-                <th style={thStyle}>{t.location}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {specialServices.map((service, index) => (
-                <tr key={index} style={trStyle(index)}>
-                  <td style={tdStyle}>{formatDate(service.date)}</td>
-                  <td style={tdStyle}>{service.time}</td>
-                  <td style={tdStyle}>{service.service}</td>
-                  <td style={tdStyle}>{service.location}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {activeTab === 'upcoming' && (
-        <div>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Date</th>
-                <th style={thStyle}>{t.time}</th>
-                <th style={thStyle}>Event</th>
-                <th style={thStyle}>{t.location}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcomingEvents.map((event, index) => (
-                <tr key={index} style={trStyle(index)}>
-                  <td style={tdStyle}>{formatDate(event.date)}</td>
-                  <td style={tdStyle}>{event.time}</td>
-                  <td style={tdStyle}>{event.event}</td>
-                  <td style={tdStyle}>{event.location}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <button style={buttonStyle}>
-            {t.viewAll}
-          </button>
-        </div>
+      ) : (
+        <div style={loadingStyle}>{t.noSchedule}</div>
       )}
     </div>
   );

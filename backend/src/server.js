@@ -204,6 +204,7 @@ const uploadRoutes = require('./routes/upload');
 const eventRoutes = require('./routes/events');
 const contactRoutes = require('./routes/contact');
 const prayerRequestRoutes = require('./routes/prayerRequests');
+const serviceScheduleRoutes = require('./routes/serviceSchedules');
 
 // Ensure upload directories exist
 const ensureUploadDirs = () => {
@@ -234,6 +235,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/prayer-requests', prayerRequestRoutes);
+app.use('/api/service-schedules', serviceScheduleRoutes);
 
 // Create donation (initial step)
 app.post('/api/donations', async (req, res) => {

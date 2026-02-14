@@ -16,7 +16,8 @@ export const API_ENDPOINTS = {
   donations: `${API_BASE_URL}/donations`,
   adminDonations: `${API_BASE_URL}/admin/donations`,
   donationStats: `${API_BASE_URL}/admin/donations/stats`,
-  prayerRequests: `${API_BASE_URL}/prayer-requests`
+  prayerRequests: `${API_BASE_URL}/prayer-requests`,
+  serviceSchedules: `${API_BASE_URL}/service-schedules`
 };
 
 export const getAuthHeader = () => {
