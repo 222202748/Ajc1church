@@ -11,24 +11,34 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
   
   const getMediaUrl = (url) => {
     if (!url || url === 'null' || url === 'undefined' || url === '') return null;
+    
+    // If it's already a full URL, return it
     if (url.startsWith('http')) return url;
     
-    // Ensure URL doesn't have double slashes
-    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    // Clean up the path
+    let cleanPath = url;
+    if (cleanPath.startsWith('http')) return cleanPath; // redundant but safe
     
-    // If it's an absolute path that already includes /uploads/, prepend BASE_URL
-    if (cleanPath.includes('/uploads/')) {
-      return `${BASE_URL}${cleanPath}`;
-    }
-    
-    // If it's a relative path to public assets (videos, audio, images), 
-    // keep it relative so it's served by the frontend host
+    // If it's a relative path to public assets (videos, audio, images)
     if (cleanPath.startsWith('/videos/') || cleanPath.startsWith('/audio/') || cleanPath.startsWith('/images/')) {
       return cleanPath;
     }
     
-    // Default fallback for other paths: assume they are relative to BASE_URL
-    return `${BASE_URL}${cleanPath}`;
+    // If it's a path from the API/uploads
+    if (cleanPath.includes('/uploads/') || cleanPath.startsWith('/api/upload/')) {
+      // If it already has the API prefix, just prepend BASE_URL
+      if (cleanPath.startsWith('/api/upload/')) {
+        return `${BASE_URL}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+      }
+      // If it's just /uploads/..., prepend BASE_URL and the API prefix
+      const uploadIndex = cleanPath.indexOf('/uploads/');
+      const relativeUploadPath = cleanPath.substring(uploadIndex);
+      return `${BASE_URL}/api/upload${relativeUploadPath}`;
+    }
+    
+    // Default fallback: prepend BASE_URL if it doesn't look like a local path
+    const path = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    return `${BASE_URL}/api/upload/videos${path}`;
   };
 
   const finalVideoUrl = getMediaUrl(videoUrl);
@@ -40,129 +50,118 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
     if (!video) return;
     
     try {
-      // Clear any previous media errors when attempting to play
       setMediaError(null);
       
       if (isPlaying) {
         video.pause();
         setIsPlaying(false);
       } else {
-        // Check if video has sources
-        const sources = Array.from(video.querySelectorAll('source'));
-        if (sources.length === 0 && !video.src) {
-          throw new Error('No video sources available');
+        console.log('Media Debug - Attempting play:', {
+          src: video.src,
+          currentSrc: video.currentSrc,
+          readyState: video.readyState,
+          networkState: video.networkState,
+          paused: video.paused,
+          sources: video.querySelectorAll('source').length
+        });
+
+        // If the video is in an error state or not loaded, try to load it
+        if (video.error || video.readyState === 0) {
+          video.load();
         }
-        
-        // Check if at least one source exists on the server
-        let sourceExists = false;
-        // For local public assets, we assume they exist or will be handled by the browser
-        const isLocalAsset = (src) => src && (src.startsWith('/videos/') || src.startsWith('/audio/') || src.includes(window.location.host));
-        
-        for (const source of sources) {
-          const src = source.src || source.currentSrc;
-          if (isLocalAsset(src)) {
-            sourceExists = true; // Assume local assets are available to avoid CORS issues with fetch
-            break;
-          }
-          try {
-            const response = await fetch(src, { method: 'HEAD' });
-            if (response.ok) {
-              sourceExists = true;
-              break;
-            }
-          } catch (e) {
-            console.warn(`Failed to check source existence via fetch: ${src}`, e);
-            // If fetch fails (e.g. CORS), we'll let the video element try to load it anyway
-            sourceExists = true; 
-            break;
-          }
-        }
-        
-        if (!sourceExists && sources.length > 0) {
-          throw new Error('Video files not found on server');
-        }
-        
-        // Ensure video is loaded before playing
-        if (video.readyState < 2) {
-          await new Promise((resolve, reject) => {
-            const onCanPlay = () => {
-              video.removeEventListener('canplay', onCanPlay);
-              video.removeEventListener('error', onError);
-              resolve();
-            };
-            const onError = (e) => {
-              video.removeEventListener('canplay', onCanPlay);
-              video.removeEventListener('error', onError);
-              
-              // Get more specific error information if possible
-              let errorMsg = 'Video failed to load';
-              if (e && e.target && e.target.error) {
-                const err = e.target.error;
-                switch (err.code) {
-                  case err.MEDIA_ERR_ABORTED:
-                    errorMsg = 'Video loading aborted';
-                    break;
-                  case err.MEDIA_ERR_NETWORK:
-                    errorMsg = 'Network error while loading video';
-                    break;
-                  case err.MEDIA_ERR_DECODE:
-                    errorMsg = 'Video decoding error';
-                    break;
-                  case err.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                    errorMsg = 'Video format not supported';
-                    break;
-                  default:
-                    errorMsg = err.message || 'Unknown video error';
-                }
-              }
-              
-              reject(new Error(errorMsg));
-            };
+
+        // Wait for the video to be playable
+        await new Promise((resolve, reject) => {
+          let hasResolved = false;
+
+          const onCanPlay = () => {
+            if (hasResolved) return;
+            hasResolved = true;
+            cleanup();
+            resolve();
+          };
+          
+          const onError = (e) => {
+            if (hasResolved) return;
             
-            video.addEventListener('canplay', onCanPlay);
-            video.addEventListener('error', onError);
-            video.load();
-          });
-        }
-        
+            const target = e.target;
+            const isVideoElement = target === video;
+            const sourceTags = Array.from(video.querySelectorAll('source'));
+            const isLastSource = target === sourceTags[sourceTags.length - 1];
+
+            // Detailed logging for debugging
+            console.error('Media Debug - Error Event:', {
+              targetTagName: target.tagName,
+              targetSrc: target.src || target.currentSrc,
+              isVideoElement,
+              isLastSource,
+              error: video.error ? { code: video.error.code, message: video.error.message } : null
+            });
+
+            if (isVideoElement || isLastSource || sourceTags.length === 0) {
+              hasResolved = true;
+              cleanup();
+              
+              const error = video.error;
+              let errorMsg = 'Failed to load video';
+              if (error) {
+                switch (error.code) {
+                  case 1: errorMsg = 'Video loading aborted'; break;
+                  case 2: errorMsg = 'Network error: Please check your connection or the server status.'; break;
+                  case 3: errorMsg = 'Video decoding error: The file might be corrupted.'; break;
+                  case 4: errorMsg = 'Video not found or format not supported by your browser.'; break;
+                  default: errorMsg = error.message || 'Unknown video error';
+                }
+              } else if (sourceTags.length === 0 && !video.src) {
+                errorMsg = 'No video source provided.';
+              }
+              reject(new Error(errorMsg));
+            }
+          };
+
+          const cleanup = () => {
+            video.removeEventListener('canplay', onCanPlay);
+            video.removeEventListener('error', onError, true);
+            sourceTags.forEach(source => source.removeEventListener('error', onError));
+          };
+
+          const sourceTags = Array.from(video.querySelectorAll('source'));
+          video.addEventListener('canplay', onCanPlay);
+          video.addEventListener('error', onError, true); 
+          sourceTags.forEach(source => source.addEventListener('error', onError));
+          
+          setTimeout(() => {
+            if (!hasResolved) {
+              hasResolved = true;
+              cleanup();
+              if (video.readyState >= 3) resolve();
+              else reject(new Error('Video loading timed out.'));
+            }
+          }, 15000);
+
+          if (video.readyState >= 3) {
+            onCanPlay();
+          }
+        });
+
         // Request fullscreen before playing
         const requestFs = async (el) => {
-          if (el.requestFullscreen) return el.requestFullscreen();
-          if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
-          if (el.msRequestFullscreen) return el.msRequestFullscreen();
-          // Fallback to parent element if available
-          if (el.parentElement && el.parentElement.requestFullscreen) {
-            return el.parentElement.requestFullscreen();
+          try {
+            if (el.requestFullscreen) return await el.requestFullscreen();
+            if (el.webkitRequestFullscreen) return await el.webkitRequestFullscreen();
+            if (el.msRequestFullscreen) return await el.msRequestFullscreen();
+          } catch (err) {
+            console.warn('Fullscreen request failed:', err);
           }
-          return Promise.resolve();
         };
-        try {
-          await requestFs(video);
-        } catch (fsErr) {
-          console.warn('Fullscreen request failed:', fsErr);
-        }
         
+        await requestFs(video);
         await video.play();
         setIsPlaying(true);
       }
     } catch (err) {
-      console.error('Error playing video:', err);
-      
-      // Provide more specific error messages based on the error
-      let errorMessage = 'Unable to play video';
-      if (err.name === 'NotAllowedError') {
-        errorMessage = 'Playback was prevented by your browser. Please try clicking the play button again.';
-      } else if (err.name === 'NotSupportedError') {
-        errorMessage = 'The video format is not supported by your browser.';
-      } else if (err.name === 'AbortError') {
-        errorMessage = 'The video playback was aborted.';
-      } else if (err.name === 'NetworkError') {
-        errorMessage = 'Network error: Unable to load video. Please check your connection.';
-      } else if (err.message) {
-        errorMessage = `Unable to play video: ${err.message}`;
-      }
-      
-      setMediaError(errorMessage);
+      console.error('Error in togglePlay:', err);
+      setMediaError(err.message || 'Unable to play video');
       setIsPlaying(false);
     }
   };
@@ -190,17 +189,25 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
   };
   
   const handleMediaError = (e) => {
+    // Prevent event bubbling if it's from a source tag to avoid multiple error triggers
+    if (e.target.tagName === 'SOURCE') {
+      e.stopPropagation();
+    }
+
     // The target could be the <source> element or the <video>/<audio> element
     const target = e.target;
     const isSourceTag = target && target.tagName === 'SOURCE';
     const mediaElement = isSourceTag ? target.parentElement : target;
     
-    console.error('Media error event caught:', {
+    // Log the error for diagnostics
+    const errorDetails = {
       type: e.type,
       targetTagName: target ? target.tagName : 'unknown',
       targetSrc: target ? (target.src || target.currentSrc) : 'none',
-      mediaElementTagName: mediaElement ? mediaElement.tagName : 'none'
-    });
+      mediaElementTagName: mediaElement ? mediaElement.tagName : 'none',
+      timestamp: new Date().toISOString()
+    };
+    console.error('Media error event caught:', errorDetails);
     
     let errorMessage = 'Media playback error';
     let detailedMessage = 'The media file could not be loaded';
@@ -210,6 +217,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
       return;
     }
 
+    // Check for sources
     const sources = Array.from(mediaElement.querySelectorAll('source'));
     const hasNoSources = sources.length === 0 && !mediaElement.src;
     
@@ -226,7 +234,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
         const sourceIndex = sources.indexOf(target);
         if (sourceIndex !== -1 && sourceIndex < sources.length - 1) {
           console.log(`Browser will attempt next source (index ${sourceIndex + 1} of ${sources.length})...`);
-          return; // Don't show error UI yet
+          return; // Don't show error UI yet, let the browser try the next source
         }
         
         detailedMessage = 'All provided media sources failed to load';
@@ -239,27 +247,27 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
             detailedMessage = 'Media loading was aborted';
             break;
           case error.MEDIA_ERR_NETWORK:
-            detailedMessage = 'Network error while loading media';
+            detailedMessage = 'Network error while loading media. Check your connection.';
             break;
           case error.MEDIA_ERR_DECODE:
-            detailedMessage = 'Media decoding error - file may be corrupted';
+            detailedMessage = 'Media decoding error - the file might be corrupted or unsupported.';
             break;
           case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-            detailedMessage = 'Media format not supported or file not found';
+            detailedMessage = 'Media format not supported or the file was not found on the server.';
             break;
           default:
-            detailedMessage = 'Unknown media error occurred';
+            detailedMessage = `Media error: ${error.message || 'Unknown error'}`;
         }
         errorMessage = error.message || `Error code: ${error.code}`;
       } else if (isSourceTag) {
         // We already set a detailed message for source failure
       } else {
-        detailedMessage = 'The media file could not be reached or is not a valid format';
+        detailedMessage = 'The media file could not be reached or is not in a valid format';
       }
     }
     
     console.error('Final media error summary:', { errorMessage, detailedMessage });
-    setMediaError(`${detailedMessage}. Please try again or contact support.`);
+    setMediaError(`${detailedMessage}`);
     setIsPlaying(false);
   };
   
@@ -334,6 +342,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
                 preload="metadata"
                 playsInline
                 controls={isPlaying}
+                crossOrigin="anonymous"
               >
                 <source src={finalVideoUrl} type="video/mp4" />
                 {/* Try alternative formats if available */}

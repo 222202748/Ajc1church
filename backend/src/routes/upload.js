@@ -59,23 +59,35 @@ router.post('/videos', authenticateAdmin, videoUpload.array('videos', 5), async 
       return res.status(400).json({ error: 'No video files uploaded' });
     }
 
-    const videos = req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      size: file.size,
-      mimetype: file.mimetype,
-      url: `/api/upload/videos/${file.filename}`,
-      uploadedAt: new Date()
-    }));
+    const savedSermons = [];
+    for (const file of req.files) {
+      const videoInfo = {
+        title: file.originalname.split('.')[0].replace(/_/g, ' '),
+        filename: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+        mimetype: file.mimetype,
+        url: `/api/upload/videos/${file.filename}`,
+        videoUrl: `/api/upload/videos/${file.filename}`,
+        pastor: "Pastor SILUVAI RAJA",
+        category: "Sermon",
+        date: new Date(),
+        uploadedAt: new Date()
+      };
+
+      const sermon = new Sermon(videoInfo);
+      await sermon.save();
+      savedSermons.push(sermon);
+    }
 
     res.json({
       success: true,
-      message: `${videos.length} videos uploaded successfully`,
-      videos
+      message: `${savedSermons.length} videos uploaded and saved successfully`,
+      videos: savedSermons
     });
   } catch (error) {
     console.error('Error uploading videos:', error);
-    res.status(500).json({ error: 'Failed to upload videos' });
+    res.status(500).json({ error: 'Failed to upload videos and save to database' });
   }
 });
 
@@ -86,11 +98,12 @@ router.post('/media', authenticateAdmin, mixedMediaUpload.array('media', 10), as
       return res.status(400).json({ error: 'No media files uploaded' });
     }
 
-    const media = req.files.map(file => {
+    const savedMedia = [];
+    for (const file of req.files) {
       const isVideo = file.mimetype.startsWith('video/');
       const baseUrl = isVideo ? '/api/upload/videos' : '/api/upload/images';
       
-      return {
+      const mediaInfo = {
         filename: file.filename,
         originalName: file.originalname,
         size: file.size,
@@ -99,12 +112,28 @@ router.post('/media', authenticateAdmin, mixedMediaUpload.array('media', 10), as
         url: `${baseUrl}/${file.filename}`,
         uploadedAt: new Date()
       };
-    });
+
+      if (isVideo) {
+        const videoInfo = {
+          ...mediaInfo,
+          title: file.originalname.split('.')[0].replace(/_/g, ' '),
+          videoUrl: mediaInfo.url,
+          pastor: "Pastor SILUVAI RAJA",
+          category: "Sermon",
+          date: new Date()
+        };
+        const sermon = new Sermon(videoInfo);
+        await sermon.save();
+        savedMedia.push({ ...mediaInfo, sermonId: sermon._id });
+      } else {
+        savedMedia.push(mediaInfo);
+      }
+    }
 
     res.json({
       success: true,
-      message: `${media.length} media files uploaded successfully`,
-      media
+      message: `${savedMedia.length} media files uploaded successfully`,
+      media: savedMedia
     });
   } catch (error) {
     console.error('Error uploading media:', error);
