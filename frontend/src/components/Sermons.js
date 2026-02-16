@@ -45,6 +45,25 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
   const finalAudioUrl = getMediaUrl(audioUrl);
   const finalThumbnailUrl = getMediaUrl(thumbnail);
   
+  const getVideoType = (url) => {
+    if (!url) return 'video/mp4';
+    const lower = url.toLowerCase();
+    if (lower.endsWith('.webm')) return 'video/webm';
+    if (lower.endsWith('.ogg') || lower.endsWith('.ogv')) return 'video/ogg';
+    return 'video/mp4';
+  };
+
+  const getAudioType = (url) => {
+    if (!url) return 'audio/mpeg';
+    const lower = url.toLowerCase();
+    if (lower.endsWith('.ogg')) return 'audio/ogg';
+    if (lower.endsWith('.wav')) return 'audio/wav';
+    return 'audio/mpeg';
+  };
+
+  const videoType = getVideoType(finalVideoUrl);
+  const audioType = getAudioType(finalAudioUrl);
+  
   const togglePlay = async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -344,10 +363,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
                 controls={isPlaying}
                 crossOrigin="anonymous"
               >
-                <source src={finalVideoUrl} type="video/mp4" />
-                {/* Try alternative formats if available */}
-                <source src={finalVideoUrl.replace('.mp4', '.webm')} type="video/webm" />
-                <source src={finalVideoUrl.replace('.mp4', '.ogg')} type="video/ogg" />
+                {finalVideoUrl && <source src={finalVideoUrl} type={videoType} />}
                 Your browser does not support the video element.
               </video>
               
@@ -437,9 +453,7 @@ const SermonCard = ({ title, category, time, pastor, videoUrl, audioUrl, thumbna
                 style={{ height: '40px' }}
                 preload="metadata"
               >
-                <source src={finalAudioUrl} type="audio/mpeg" />
-                <source src={finalAudioUrl.replace('.mp3', '.ogg')} type="audio/ogg" />
-                <source src={finalAudioUrl.replace('.mp3', '.wav')} type="audio/wav" />
+                {finalAudioUrl && <source src={finalAudioUrl} type={audioType} />}
                 Your browser does not support the audio element.
               </audio>
             </div>
@@ -476,7 +490,10 @@ const Sermons = () => {
         setError(null);
         
         // Try to fetch videos from the backend using axios instance
-        const response = await axiosInstance.get('/api/upload/videos/list', { requiresAuth: false });
+        const response = await axiosInstance.get('/api/upload/videos/list', { 
+          requiresAuth: false,
+          params: { t: Date.now() }
+        });
         
         if (response.status === 200 && response.data) {
           const data = response.data;

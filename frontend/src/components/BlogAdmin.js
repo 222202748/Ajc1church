@@ -715,8 +715,8 @@ const BlogAdmin = () => {
               name="content"
               value={formData.content}
               onChange={handleInputChange}
-              rows="10"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.content ? 'border-red-500' : 'border-gray-300'}`}
+              rows="16"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[320px] ${formErrors.content ? 'border-red-500' : 'border-gray-300'}`}
               placeholder={t.contentPlaceholder}
             ></textarea>
             {formErrors.content && <p className="mt-1 text-sm text-red-500">{formErrors.content}</p>}
@@ -918,7 +918,7 @@ const BlogAdmin = () => {
         </div>
 
         {/* Article Preview */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-lg shadow-md">
           {/* Article Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8">
             <div className="mb-4">
@@ -1023,6 +1023,30 @@ const BlogAdmin = () => {
         {(currentView === 'create' || currentView === 'edit') && <ArticleForm />}
         {currentView === 'view' && <ArticleView />}
       </div>
+      {currentView === 'list' && (
+        <button
+          onClick={() => {
+            setSelectedArticle(null);
+            setFormData({
+              title: '',
+              content: '',
+              excerpt: '',
+              category: 'sermon',
+              tags: '',
+              status: 'draft',
+              featuredImage: null,
+              featuredVideo: null,
+              mediaType: 'image'
+            });
+            setImagePreview(null);
+            setCurrentView('create');
+          }}
+          className="fixed bottom-6 right-6 px-4 py-3 rounded-full bg-blue-600 text-white shadow-lg flex items-center space-x-2 z-[2001]"
+        >
+          <Plus className="w-5 h-5" />
+          <span>{t.newArticle}</span>
+        </button>
+      )}
     </div>
   );
 };

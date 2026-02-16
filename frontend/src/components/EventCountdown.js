@@ -47,21 +47,18 @@ const EventCountdown = () => {
         
         if (events && events.length > 0) {
           const now = new Date();
-          // Find the closest future event
           const futureEvents = events
             .map(e => ({ ...e, dateObj: combineDateTime(e.date, e.time) }))
             .filter(e => e.dateObj > now)
             .sort((a, b) => a.dateObj - b.dateObj);
-          
+
           if (futureEvents.length > 0) {
             setNextEvent(futureEvents[0]);
           } else {
-            // If no future events, maybe show the most recent past event but without a running timer
-            const sortedEvents = events
-              .map(e => ({ ...e, dateObj: combineDateTime(e.date, e.time) }))
-              .sort((a, b) => b.dateObj - a.dateObj);
-            setNextEvent(sortedEvents[0]);
+            setNextEvent(null);
           }
+        } else {
+          setNextEvent(null);
         }
       } catch (err) {
         console.error('Error fetching next event:', err);
@@ -207,7 +204,7 @@ const EventCountdown = () => {
         </div>
         <div>
           <span style={{ opacity: '0.8' }}>{t.location}: </span>
-          <strong>{nextEvent.location}</strong>
+          <strong>{t.address}</strong>
         </div>
       </div>
 

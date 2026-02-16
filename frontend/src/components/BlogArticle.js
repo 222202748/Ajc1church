@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, User, ArrowLeft, Tag, Share2, Heart } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 
@@ -9,47 +9,29 @@ const BlogArticle = () => {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [relatedArticles, setRelatedArticles] = useState([]);
 
   useEffect(() => {
     const fetchArticle = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}/${id}`, { requiresAuth: false });
-        
+        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}/${id}`, {
+          requiresAuth: false
+        });
+
         const data = response.data;
         if (data.success && data.blog) {
           setArticle(data.blog);
-          // After getting the article, fetch related articles
-          fetchRelatedArticles(data.blog.category, data.blog._id);
         } else {
           throw new Error('Article not found');
         }
-      } catch (error) {
-        console.error('Error fetching article:', error);
+      } catch (err) {
+        console.error('Error fetching article:', err);
         setError('Failed to load article. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-    
-    const fetchRelatedArticles = async (category, currentId) => {
-      try {
-        // Fetch articles in the same category, excluding the current one
-        const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}?category=${category}&limit=3`, { requiresAuth: false });
-        
-        const data = response.data;
-        if (data.success && data.blogs) {
-          // Filter out the current article
-          const filtered = data.blogs.filter(blog => blog._id !== currentId);
-          setRelatedArticles(filtered.slice(0, 3)); // Limit to 3 related articles
-        }
-      } catch (error) {
-        console.error('Error fetching related articles:', error);
-        // Don't set an error state here, as it's not critical
-      }
-    };
-    
+
     if (id) {
       fetchArticle();
     }
@@ -65,145 +47,182 @@ const BlogArticle = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-        <div className="animate-pulse">
-          <div className="h-96 bg-gray-200 rounded-lg mb-8"></div>
-          <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-8"></div>
-          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-        </div>
-      </div>
-    );
-  }
+  const getAuthorInitials = (name) => {
+    if (!name) return 'A';
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].charAt(0).toUpperCase();
+    }
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
 
-  if (error || !article) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-        <div className="bg-red-50 p-6 rounded-lg">
-          <h2 className="text-2xl font-bold text-red-700 mb-4">
-            {error || 'Article not found'}
-          </h2>
-          <p className="text-red-600 mb-6">
-            We couldn't find the article you're looking for. It may have been removed or the URL might be incorrect.
-          </p>
-          <Link 
-            to="/blog" 
-            className="inline-flex items-center gap-2 bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition-colors"
+  const getReadTime = (value) => {
+    if (!value) return '5 min read';
+    const text = value.replace(/<[^>]+>/g, ' ');
+    const words = text.trim().split(/\s+/).filter(Boolean).length || 1;
+    const minutes = Math.max(1, Math.round(words / 200));
+    return `${minutes} min read`;
+  };
+
+  const hasHtmlTags = (value) => {
+    if (!value) return false;
+    return /<\/?[a-z][\s\S]*>/i.test(value);
+  };
+
+  const renderContent = (value) => {
+    if (!value) return null;
+
+    if (hasHtmlTags(value)) {
+      return (
+        <div
+          className="font-serif text-[17px] leading-[1.8] text-gray-800 space-y-4"
+          dangerouslySetInnerHTML={{ __html: value }}
+        />
+      );
+    }
+
+    const lines = value.split(/\r?\n/);
+    const elements = [];
+    let keyIndex = 0;
+
+    lines.forEach((rawLine) => {
+      const line = rawLine.trim();
+
+      if (!line) {
+        elements.push(
+          <div key={`gap-${keyIndex}`} className="h-2" />
+        );
+        keyIndex += 1;
+        return;
+      }
+
+      if (/^\d+\.\s/.test(line)) {
+        elements.push(
+          <p
+            key={`main-${keyIndex}`}
+            className="mt-4 mb-1 text-lg font-semibold text-gray-900"
           >
-            <ArrowLeft size={16} />
-            Back to Blog
-          </Link>
-        </div>
+            {line}
+          </p>
+        );
+        keyIndex += 1;
+        return;
+      }
+
+      if (line.endsWith(':')) {
+        elements.push(
+          <p
+            key={`sub-${keyIndex}`}
+            className="mt-3 mb-1 font-semibold text-gray-800"
+          >
+            {line}
+          </p>
+        );
+        keyIndex += 1;
+        return;
+      }
+
+      elements.push(
+        <p
+          key={`p-${keyIndex}`}
+          className="text-gray-800 leading-relaxed mb-2"
+        >
+          {line}
+        </p>
+      );
+      keyIndex += 1;
+    });
+
+    return (
+      <div className="font-serif text-[17px] leading-[1.8] text-gray-800">
+        {elements}
       </div>
     );
-  }
+  };
+
+  const authorName = article?.author?.username || 'Church Author';
+  const readTime = article ? getReadTime(article.content || '') : '';
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      {/* Back Button */}
-      <Link 
-        to="/blog" 
-        className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 mb-8"
-      >
-        <ArrowLeft size={16} />
-        Back to Blog
-      </Link>
-
-      {/* Article Header */}
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-        {article.featuredImage && (
-          <img 
-            src={article.featuredImage} 
-            alt={article.title} 
-            className="w-full h-96 object-cover"
-          />
-        )}
-        <div className="p-8">
-          <div className="flex items-center gap-4 text-gray-500 text-sm mb-4">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} />
-              {formatDate(article.publishedAt || article.createdAt)}
+    <div className="min-h-screen bg-[#f8f5ef]">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {loading ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-[#8B4513] border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-gray-700 text-lg">Loading article...</p>
+          </div>
+        ) : error || !article ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="text-red-500 text-lg mb-4">
+              {error || 'Article not found'}
             </div>
-            {article.author && (
-              <div className="flex items-center gap-2">
-                <User size={16} />
-                {article.author.username}
+            <Link
+              to="/all-articles"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#8B4513] text-white rounded-lg hover:bg-[#6f3610] transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Back to All Articles
+            </Link>
+          </div>
+        ) : (
+          <>
+            <Link
+              to="/all-articles"
+              className="inline-flex items-center gap-2 text-[#8B4513] hover:text-[#6f3610] mb-4 text-sm font-medium tracking-wide"
+            >
+              <ArrowLeft size={16} />
+              Back to All Articles
+            </Link>
+
+            <header className="max-w-3xl mx-auto pt-6 px-4 sm:px-8">
+              <div className="flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-[#b5522a] mb-5">
+                <span className="inline-block w-7 h-[2px] bg-[#b5522a]" />
+                <span>Devotional</span>
+              </div>
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-gray-900 mb-6">
+                {article.title}
+              </h1>
+              {article.excerpt && (
+                <p className="font-serif text-lg text-gray-700 leading-relaxed mb-8">
+                  {article.excerpt}
+                </p>
+              )}
+              <div className="flex items-center gap-4 pb-6 mb-10 border-b border-[#d0c9bc]">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#b5522a] to-[#e8956d] flex items-center justify-center text-white font-semibold text-lg">
+                  {getAuthorInitials(authorName)}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium tracking-[0.03em]">
+                    {authorName}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 tracking-[0.02em]">
+                    {formatDate(article.publishedAt || article.createdAt)}
+                  </div>
+                </div>
+                <div className="text-xs text-gray-700 border border-[#d0c9bc] px-3 py-1 rounded-full tracking-[0.08em] uppercase">
+                  {readTime}
+                </div>
+              </div>
+            </header>
+
+            {article.featuredImage && (
+              <div className="max-w-3xl mx-auto px-4 sm:px-8 mb-8">
+                <div className="w-full h-64 sm:h-80 bg-gray-200 overflow-hidden">
+                  <img
+                    src={article.featuredImage}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
             )}
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{article.title}</h1>
-          {article.tags && article.tags.length > 0 && (
-            <div className="flex items-center gap-2 mb-6 flex-wrap">
-              <Tag size={16} className="text-gray-400" />
-              {article.tags.map((tag, index) => (
-                <span key={index} className="bg-amber-100 text-amber-800 text-sm px-3 py-1 rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          <div className="flex items-center gap-4 mt-4">
-            <button className="flex items-center gap-2 text-gray-500 hover:text-amber-600">
-              <Share2 size={18} />
-              Share
-            </button>
-            <button className="flex items-center gap-2 text-gray-500 hover:text-red-600">
-              <Heart size={18} />
-              Like
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Article Content */}
-      <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-        <div className="prose max-w-none">
-          {article.excerpt && (
-            <p className="text-lg text-gray-700 leading-relaxed mb-6 font-semibold">
-              {article.excerpt}
-            </p>
-          )}
-          
-          <div 
-            className="text-gray-700 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
-        </div>
+            <article className="max-w-3xl mx-auto px-4 sm:px-8 pb-16">
+              {renderContent(article.content || '')}
+            </article>
+          </>
+        )}
       </div>
-
-      {/* Related Posts */}
-      {relatedArticles.length > 0 && (
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Posts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {relatedArticles.map((relatedArticle) => (
-              <Link 
-                key={relatedArticle._id}
-                to={`/blog/${relatedArticle._id}`}
-                className="cursor-pointer group"
-              >
-                {relatedArticle.featuredImage && (
-                  <img 
-                    src={relatedArticle.featuredImage} 
-                    alt={relatedArticle.title}
-                    className="w-full h-32 object-cover rounded-lg mb-3 group-hover:opacity-90 transition-opacity"
-                  />
-                )}
-                <h3 className="font-semibold text-gray-800 group-hover:text-amber-600 transition-colors">
-                  {relatedArticle.title}
-                </h3>
-                <p className="text-gray-500 text-sm mt-1">
-                  {formatDate(relatedArticle.publishedAt || relatedArticle.createdAt)}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

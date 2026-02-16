@@ -14,6 +14,7 @@ const Header = () => {
   const { language, toggleLanguage } = useLanguage();
   const location = useLocation();
   const currentPage = location.pathname;
+  const isAdminRoute = currentPage.toLowerCase().startsWith('/admin');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -131,76 +132,90 @@ const Header = () => {
               {language === 'tamil' ? 'தமிழ்' : 'English'}
             </button>
 
-            <button
-              onClick={toggleMobileMenu}
-              className="xl:hidden p-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
-              aria-label="Toggle Menu"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      <div className={`fixed inset-0 z-[999] xl:hidden transition-all duration-500 ${
-        isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-      }`}>
-        {/* Backdrop */}
-        <div 
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={toggleMobileMenu}
-        />
-        
-        {/* Menu Content */}
-        <div className={`absolute top-0 right-0 bottom-0 w-[280px] sm:w-[320px] bg-[#8B4513] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}>
-          <div className="p-6 flex items-center justify-between border-b border-white/10">
-            <span className="text-white font-bold text-lg">
-              {language === 'tamil' ? 'மெனு' : 'Menu'}
-            </span>
-            <button 
-              onClick={toggleMobileMenu}
-              className="p-2 rounded-lg bg-white/10 text-white"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            {getNavLinks().map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={handleNavClick}
-                className={`flex items-center justify-between px-4 py-4 rounded-xl transition-all duration-300 ${
-                  isCurrentPage(link.to)
-                    ? 'bg-white text-[#8B4513]'
-                    : 'text-white/90 hover:bg-white/10'
-                }`}
+            {!isAdminRoute && (
+              <button
+                onClick={toggleMobileMenu}
+                className="xl:hidden p-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+                aria-label="Toggle Menu"
               >
-                <div className="flex items-center">
-                  <span className={`font-bold ${language === 'tamil' ? 'text-base' : 'text-lg'}`}>
-                    {link.label}
-                  </span>
-                </div>
-                <ChevronRight size={18} className="opacity-40" />
-              </Link>
-            ))}
-          </div>
-
-          <div className="p-6 border-t border-white/10">
-            <button
-              onClick={toggleLanguage}
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold hover:bg-white/20 transition-all"
-            >
-              <Globe size={20} />
-              {language === 'tamil' ? 'தமிழ் மொழிக்கு மாற்றவும்' : 'Switch to Tamil'}
-            </button>
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay (disabled on Admin routes) */}
+      {!isAdminRoute && (
+        <div
+          className={`fixed inset-0 z-[999] xl:hidden transition-all duration-500 ${
+            isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          }`}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={toggleMobileMenu}
+          />
+
+          {/* Menu Content */}
+          <div
+            className={`absolute top-0 right-0 bottom-0 w-[280px] sm:w-[320px] bg-[#8B4513] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${
+              isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
+            <div className="p-6 flex items-center justify-between border-b border-white/10">
+              <span className="text-white font-bold text-lg">
+                {language === 'tamil' ? 'மெனு' : 'Menu'}
+              </span>
+              <button
+                onClick={toggleMobileMenu}
+                className="p-2 rounded-lg bg-white/10 text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+              {getNavLinks().map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={handleNavClick}
+                  className={`flex items-center justify-between px-4 py-4 rounded-xl transition-all duration-300 ${
+                    isCurrentPage(link.to)
+                      ? 'bg-white text-[#8B4513]'
+                      : 'text-white/90 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <span
+                      className={`font-bold ${
+                        language === 'tamil' ? 'text-base' : 'text-lg'
+                      }`}
+                    >
+                      {link.label}
+                    </span>
+                  </div>
+                  <ChevronRight size={18} className="opacity-40" />
+                </Link>
+              ))}
+            </div>
+
+            <div className="p-6 border-t border-white/10">
+              <button
+                onClick={toggleLanguage}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold hover:bg-white/20 transition-all"
+              >
+                <Globe size={20} />
+                {language === 'tamil'
+                  ? 'தமிழ் மொழிக்கு மாற்றவும்'
+                  : 'Switch to Tamil'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

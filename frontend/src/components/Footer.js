@@ -6,6 +6,12 @@ const Footer = () => {
   const { language } = useLanguage();
   const t = translations[language] || {};
 
+  const mainBranchAddress = '2/233, Kothandam Salai, 4 Th Cross Stree, Periyar Nagar Expansion, Kundrathur, Nandambakkam, Chennai, Tamil Nadu 600069';
+  const branchAddress = '40/2, 7th Main Road, 12th Cross Street, Pudu Nallur, Kundrathur, Chennai 69.';
+
+  const mainBranchMapUrl = 'https://maps.app.goo.gl/gM8yFnE6KGTnm4yU7';
+  const branchMapUrl = 'https://maps.app.goo.gl/shHqPcJT7Ks4J1mS6';
+
   return (
     <footer className="pt-5 pb-3 bg-dark text-light">
       <div className="container">
@@ -19,6 +25,38 @@ const Footer = () => {
             <p className="h5 fw-bold">{t.footer?.phone || 'Phone'}: +919841711591, +919444201754</p>
             <p className="h5 fw-bold">{t.footer?.whatsapp || 'WhatsApp'}: +919841711591, +919444201754</p>
             <p className="small">{t.footer?.support || ''}: @gmail.com</p>
+
+            <div className="mt-3">
+              <h6 className="fw-bold">{t.footer?.locationTitle || 'Locate Us'}</h6>
+              <div className="d-flex flex-column gap-2">
+                <a
+                  href={mainBranchMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-light text-decoration-none d-flex align-items-start"
+                >
+                  <i className="bi bi-geo-alt-fill me-2 mt-1"></i>
+                  <span className="small">
+                    <strong>{t.footer?.mainBranchLabel || 'Main Branch'}:</strong>
+                    <br />
+                    {mainBranchAddress}
+                  </span>
+                </a>
+                <a
+                  href={branchMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-light text-decoration-none d-flex align-items-start"
+                >
+                  <i className="bi bi-geo-alt-fill me-2 mt-1"></i>
+                  <span className="small">
+                    <strong>{t.footer?.branchLabel || 'Branch'}:</strong>
+                    <br />
+                    {branchAddress}
+                  </span>
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Newsletter Section */}

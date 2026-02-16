@@ -21,7 +21,9 @@ const SermonVideoUpload = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axiosInstance.get('/api/upload/videos/list');
+      const response = await axiosInstance.get('/api/upload/videos/list', {
+        params: { t: Date.now() }
+      });
 
       const data = response.data;
       console.log('Fetched videos data:', data);
