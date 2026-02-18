@@ -30,8 +30,8 @@ const blogSchema = new mongoose.Schema({
   },
   mediaType: {
     type: String,
-    enum: ['image', 'video', 'both'],
-    default: 'image'
+    enum: ['none', 'image', 'video', 'both'],
+    default: 'none'
   },
   media: [{
     type: {

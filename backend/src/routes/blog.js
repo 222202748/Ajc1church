@@ -231,7 +231,7 @@ router.post('/admin/create-with-media', authenticateAdmin, mixedMediaUpload.fiel
   { name: 'media', maxCount: 10 }
 ]), async (req, res) => {
   try {
-    const { title, content, excerpt, category, tags, status, seo, mediaType } = req.body;
+    const { title, content, excerpt, category, tags, status, seo, mediaType, featuredImageUrl } = req.body;
     
     // Validate required fields
     if (!title || !content || !excerpt || !category) {
@@ -262,10 +262,14 @@ router.post('/admin/create-with-media', authenticateAdmin, mixedMediaUpload.fiel
       }
     }
     
+    if (featuredImageUrl) {
+      blogData.featuredImage = featuredImageUrl;
+    }
+
     // Handle uploaded files
     if (req.files) {
       // Featured image
-      if (req.files.featuredImage && req.files.featuredImage[0]) {
+      if (req.files.featuredImage && req.files.featuredImage[0] && !blogData.featuredImage) {
         const file = req.files.featuredImage[0];
         blogData.featuredImage = `/api/blog/images/${file.filename}`;
       }
@@ -374,7 +378,7 @@ router.put('/admin/update/:id', authenticateAdmin, mixedMediaUpload.fields([
   { name: 'media', maxCount: 10 }
 ]), async (req, res) => {
   try {
-    const { title, content, excerpt, category, tags, status, seo, mediaType } = req.body;
+    const { title, content, excerpt, category, tags, status, seo, mediaType, featuredImageUrl } = req.body;
     
     const blog = await Blog.findById(req.params.id);
     if (!blog) {
@@ -388,6 +392,9 @@ router.put('/admin/update/:id', authenticateAdmin, mixedMediaUpload.fields([
     if (category) blog.category = category;
     if (status) blog.status = status;
     if (mediaType) blog.mediaType = mediaType;
+    if (featuredImageUrl) {
+      blog.featuredImage = featuredImageUrl;
+    }
     
     // Handle tags
     if (tags) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, User, ArrowRight } from 'lucide-react';
+import { Calendar, User, ArrowRight, Share2, Download } from 'lucide-react';
 import { API_ENDPOINTS, BASE_URL } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -59,6 +59,55 @@ const HomeBlogPreview = () => {
     return new Date(dateString).toLocaleDateString(locale, options);
   };
 
+  const handleShare = async (article) => {
+    const url = `${window.location.origin}/blog/${article._id}`;
+    const title = article.title;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch (err) {
+      }
+      return;
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert(getTranslation('blog.shareCopied', 'Article link copied to clipboard.'));
+      } catch (err) {
+        alert(getTranslation('blog.shareCopyError', 'Unable to copy link. Please share manually.'));
+      }
+    } else {
+      alert(getTranslation('blog.shareNotSupported', 'Sharing is not supported in this browser.'));
+    }
+  };
+
+  const handleDownload = (article) => {
+    const parts = [];
+    if (article.title) {
+      parts.push(article.title);
+      parts.push('');
+    }
+    if (article.excerpt) {
+      parts.push(article.excerpt);
+      parts.push('');
+    }
+    if (article.content) {
+      parts.push(article.content);
+    }
+    const text = parts.join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(article.title || 'article').replace(/[\\/:*?"<>|]+/g, '')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <section className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -108,13 +157,35 @@ const HomeBlogPreview = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{article.title}</h3>
                   <p className="text-gray-600 mb-4">{article.excerpt}</p>
-                  <Link 
-                    to={`/blog/${article._id}`} 
-                    className="inline-flex items-center px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-full shadow-sm hover:bg-[#6f3610] hover:shadow-md transition-all"
-                  >
-                    <span>{getTranslation('readMore', 'Read More')}</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
+                  <div className="flex items-center justify-between">
+                    <Link 
+                      to={`/blog/${article._id}`} 
+                      className="inline-flex items-center px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-full shadow-sm hover:bg-[#6f3610] hover:shadow-md transition-all"
+                    >
+                      <span>{getTranslation('readMore', 'Read More')}</span>
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handleShare(article)}
+                        className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                        aria-label={getTranslation('blog.share', 'Share article')}
+                        title={getTranslation('blog.share', 'Share article')}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(article)}
+                        className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                        aria-label={getTranslation('blog.download', 'Download article')}
+                        title={getTranslation('blog.download', 'Download article')}
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

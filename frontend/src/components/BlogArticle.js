@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, BASE_URL } from '../config/api';
 import axiosInstance from '../utils/axiosConfig';
 
 const BlogArticle = () => {
@@ -14,6 +14,7 @@ const BlogArticle = () => {
     const fetchArticle = async () => {
       try {
         setLoading(true);
+        setError(null); // ✅ Clear previous errors before fetching
         const response = await axiosInstance.get(`${API_ENDPOINTS.blogArticles}/${id}`, {
           requiresAuth: false
         });
@@ -26,7 +27,7 @@ const BlogArticle = () => {
         }
       } catch (err) {
         console.error('Error fetching article:', err);
-        setError('Failed to load article. Please try again.');
+        setError(err?.response?.data?.message || 'Failed to load article. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -39,16 +40,21 @@ const BlogArticle = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return ''; // ✅ Guard against invalid dates
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return '';
+    }
   };
 
   const getAuthorInitials = (name) => {
-    if (!name) return 'A';
+    if (!name || typeof name !== 'string') return 'A'; // ✅ Type guard
     const parts = name.split(' ').filter(Boolean);
     if (parts.length === 1) {
       return parts[0].charAt(0).toUpperCase();
@@ -57,7 +63,7 @@ const BlogArticle = () => {
   };
 
   const getReadTime = (value) => {
-    if (!value) return '5 min read';
+    if (!value || typeof value !== 'string') return '5 min read'; // ✅ Type guard
     const text = value.replace(/<[^>]+>/g, ' ');
     const words = text.trim().split(/\s+/).filter(Boolean).length || 1;
     const minutes = Math.max(1, Math.round(words / 200));
@@ -65,18 +71,43 @@ const BlogArticle = () => {
   };
 
   const hasHtmlTags = (value) => {
-    if (!value) return false;
+    if (!value || typeof value !== 'string') return false; // ✅ Type guard
     return /<\/?[a-z][\s\S]*>/i.test(value);
   };
 
+  // ✅ Sanitize HTML to prevent XSS — strips dangerous tags/attributes
+  const sanitizeHtml = (html) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+
+    const dangerousTags = div.querySelectorAll('script, iframe, object, embed, form');
+    dangerousTags.forEach((el) => el.remove());
+
+    const allElements = div.querySelectorAll('*');
+    allElements.forEach((el) => {
+      Array.from(el.attributes).forEach((attr) => {
+        const attrName = attr.name;
+        const attrValue = typeof attr.value === 'string' ? attr.value.trim().toLowerCase() : '';
+        if (
+          attrName.startsWith('on') ||
+          (attrName === 'href' && /^javascript:/i.test(attrValue))
+        ) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+
+    return div.innerHTML;
+  };
+
   const renderContent = (value) => {
-    if (!value) return null;
+    if (!value || typeof value !== 'string') return null; // ✅ Type guard
 
     if (hasHtmlTags(value)) {
       return (
         <div
           className="font-serif text-[17px] leading-[1.8] text-gray-800 space-y-4"
-          dangerouslySetInnerHTML={{ __html: value }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }} // ✅ Sanitized before render
         />
       );
     }
@@ -89,19 +120,14 @@ const BlogArticle = () => {
       const line = rawLine.trim();
 
       if (!line) {
-        elements.push(
-          <div key={`gap-${keyIndex}`} className="h-2" />
-        );
+        elements.push(<div key={`gap-${keyIndex}`} className="h-2" />);
         keyIndex += 1;
         return;
       }
 
       if (/^\d+\.\s/.test(line)) {
         elements.push(
-          <p
-            key={`main-${keyIndex}`}
-            className="mt-4 mb-1 text-lg font-semibold text-gray-900"
-          >
+          <p key={`main-${keyIndex}`} className="mt-4 mb-1 text-lg font-semibold text-gray-900">
             {line}
           </p>
         );
@@ -111,10 +137,7 @@ const BlogArticle = () => {
 
       if (line.endsWith(':')) {
         elements.push(
-          <p
-            key={`sub-${keyIndex}`}
-            className="mt-3 mb-1 font-semibold text-gray-800"
-          >
+          <p key={`sub-${keyIndex}`} className="mt-3 mb-1 font-semibold text-gray-800">
             {line}
           </p>
         );
@@ -123,10 +146,7 @@ const BlogArticle = () => {
       }
 
       elements.push(
-        <p
-          key={`p-${keyIndex}`}
-          className="text-gray-800 leading-relaxed mb-2"
-        >
+        <p key={`p-${keyIndex}`} className="text-gray-800 leading-relaxed mb-2">
           {line}
         </p>
       );
@@ -140,8 +160,21 @@ const BlogArticle = () => {
     );
   };
 
-  const authorName = article?.author?.username || 'Church Author';
+  // ✅ Safe fallbacks for potentially missing nested fields
+  const authorName =
+    article?.author?.username ||
+    article?.author?.name ||
+    'Church Author';
+
   const readTime = article ? getReadTime(article.content || '') : '';
+
+  // ✅ Safe image URL builder — guards against non-string values
+  const getImageUrl = (featuredImage) => {
+    if (!featuredImage || typeof featuredImage !== 'string') return null;
+    return featuredImage.startsWith('http') ? featuredImage : `${BASE_URL}${featuredImage}`;
+  };
+
+  const imageUrl = article ? getImageUrl(article.featuredImage) : null;
 
   return (
     <div className="min-h-screen bg-[#f8f5ef]">
@@ -205,13 +238,17 @@ const BlogArticle = () => {
               </div>
             </header>
 
-            {article.featuredImage && (
+            {/* ✅ Only renders image if URL is valid */}
+            {imageUrl && (
               <div className="max-w-3xl mx-auto px-4 sm:px-8 mb-8">
                 <div className="w-full h-64 sm:h-80 bg-gray-200 overflow-hidden">
                   <img
-                    src={article.featuredImage}
-                    alt={article.title}
+                    src={imageUrl}
+                    alt={article.title || 'Article image'}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'; // ✅ Hide broken images gracefully
+                    }}
                   />
                 </div>
               </div>
