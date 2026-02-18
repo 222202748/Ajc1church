@@ -10,7 +10,6 @@ const adminSchema = new mongoose.Schema({
   lastLogin: Date,
   createdAt: { type: Date, default: Date.now }
 }, {
-  bufferCommands: false, // Disable buffering so it fails fast if DB is not connected
   timestamps: true
 });
 
