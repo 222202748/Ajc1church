@@ -1,6 +1,6 @@
 export const BASE_URL =
   process.env.REACT_APP_API_URL ||
-  'https://ajc1church.onrender.com';
+  'https://ajc1church-311.onrender.com';
 const API_BASE_URL = `${BASE_URL}/api`;
 
 export const API_ENDPOINTS = {
